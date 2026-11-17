@@ -1,0 +1,16 @@
+---
+import { APP_URL } from "../config";
+interface Props {
+  variant?: "accent" | "dark";
+  class?: string;
+}
+const { variant = "accent", class: className = "" } = Astro.props;
+const colors =
+  variant === "accent"
+    ? "bg-accent text-navy-900 hover:bg-accent-hover"
+    : "bg-navy-900 text-white hover:bg-blue-800";
+---
+<a
+  href={APP_URL}
+  class:list={["btn flex items-center justify-center rounded-full font-medium", colors, className]}
+>Проверить билет</a>

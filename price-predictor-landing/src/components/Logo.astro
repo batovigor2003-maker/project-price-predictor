@@ -1,0 +1,19 @@
+---
+// Temporary CSS logo: circle with a dot. Replace with the final SVG later.
+interface Props {
+  variant?: "dark" | "light";
+  class?: string;
+  circleClass: string;
+  dotClass: string;
+  textClass: string;
+}
+const { variant = "dark", class: className = "", circleClass, dotClass, textClass } = Astro.props;
+const circleBg = variant === "dark" ? "bg-navy-900" : "bg-white";
+const dotBg = variant === "dark" ? "bg-sky-200" : "bg-blue-600";
+---
+<div class:list={["flex items-center", className]}>
+  <div class:list={["grid place-items-center rounded-full", circleBg, circleClass]} aria-hidden="true">
+    <div class:list={["rounded-full", dotBg, dotClass]}></div>
+  </div>
+  <span class:list={["font-semibold", textClass]}>Чекбилет</span>
+</div>

@@ -1,0 +1,31 @@
+---
+import { DEMO, FORECASTS } from "../data/forecast";
+const f = FORECASTS[0];
+---
+<div class="relative flex w-[290px] flex-col rounded-[22px] bg-white text-left shadow-[0_20px_44px_rgba(3,25,91,.22)] lg:w-[440px] lg:rounded-[26px] lg:shadow-[0_26px_60px_rgba(3,25,91,.22)]">
+  <div class="flex items-center justify-between px-[18px] py-4 lg:px-[26px] lg:py-[22px]">
+    <div class="flex flex-col">
+      <span class="text-[28px] font-bold lg:text-[40px]">{DEMO.from.code}</span>
+      <span class="text-[12px] text-muted lg:text-[14px]">{DEMO.from.city}</span>
+    </div>
+    <div class="mx-2.5 flex-1 border-t-2 border-dashed border-sky-300 lg:mx-4"></div>
+    <div class="flex flex-col items-end">
+      <span class="text-[28px] font-bold lg:text-[40px]">{DEMO.to.code}</span>
+      <span class="text-[12px] text-muted lg:text-[14px]">{DEMO.to.city}</span>
+    </div>
+  </div>
+  <div class="relative mx-3.5 border-t-2 border-dashed border-line lg:mx-[18px]" aria-hidden="true">
+    <div class="absolute -top-[11px] -left-[25px] size-5 rounded-full bg-notch lg:-top-[13px] lg:-left-8 lg:size-6"></div>
+    <div class="absolute -top-[11px] -right-[25px] size-5 rounded-full bg-notch lg:-top-[13px] lg:-right-8 lg:size-6"></div>
+  </div>
+  <div class="flex items-center justify-between px-[18px] py-3.5 lg:px-[26px] lg:py-5">
+    <div class="flex flex-col gap-0.5 lg:gap-1">
+      <span class="text-[12px] text-muted lg:text-[14px]">{DEMO.trip}</span>
+      <span class="text-[19px] font-semibold lg:text-[26px]">{DEMO.price}</span>
+    </div>
+    <div class="flex flex-col items-end gap-0.5 whitespace-nowrap lg:gap-1" aria-live="polite">
+      <span class="fc-text text-[15px] font-semibold lg:text-[18px]"><span data-f="arrow">{f.arrow}</span> <span data-f="label">{f.label}</span></span>
+      <span class="text-[12px] text-muted lg:text-[14px]" data-f="advice">{f.advice}</span>
+    </div>
+  </div>
+</div>

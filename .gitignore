@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+!**/.env.example
+.claude/settings.local.json
+node_modules
+.next
+.next-dev
+*.tsbuildinfo
+.DS_Store
+.playwright-mcp/
+dist/
+.astro/

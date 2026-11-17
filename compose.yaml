@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-checkbilet}
+      POSTGRES_USER: ${POSTGRES_USER:-checkbilet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-checkbilet}
+    volumes:
+      - checkbilet_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-checkbilet} -d ${POSTGRES_DB:-checkbilet}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  checkbilet_postgres:
