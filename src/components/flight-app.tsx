@@ -107,7 +107,7 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
           <div className="min-w-0"><p className="text-xs font-medium text-[var(--muted)]">Ваш билет</p><h1 id="search-title" className="mt-1 text-lg font-semibold sm:text-xl">{cityName(form.originCode)} <ArrowRight className="inline size-4 text-[var(--brand)]"/> {cityName(form.destinationCode)}</h1><p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(form.departureDate)}{form.returnDate && ` — ${dateLabel(form.returnDate)}`} · {passengerCount} {passengerWord} · {classNames[form.cabinClass].toLowerCase()}</p></div>
           <button type="button" onClick={() => setFormCollapsed(false)} className="action-control secondary-action px-3">Изменить</button>
         </div> : <div className="search-card">
-          <div className="mb-7 max-w-2xl">
+          <div className="mb-4 max-w-2xl sm:mb-5">
             <h1 id="search-title" className="text-[28px] font-semibold leading-[1.14] tracking-[-.035em] sm:text-[38px]">Покупать сейчас или подождать?</h1>
           </div>
           <form onSubmit={(event) => { event.preventDefault(); void submit(); }}>
@@ -125,7 +125,7 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
               <span><span className="block text-xs font-medium text-[var(--muted)]">Пассажиры и класс</span><span className="mt-0.5 block text-sm font-medium sm:text-base">{passengerCount} {passengerWord}, {classNames[form.cabinClass].toLowerCase()}</span></span><ChevronDown size={18} className="shrink-0 text-[var(--muted)]"/>
             </button>
             <div className="mt-5">
-              <Button size="lg" disabled={loading} aria-busy={loading} className="w-full gap-2 text-base">{loading ? 'Ищем прогноз…' : 'Узнать прогноз'}{!loading && <ArrowRight size={18} aria-hidden="true"/>}</Button>
+              <Button variant="highlight" size="lg" disabled={loading} aria-busy={loading} className="w-full text-base">{loading ? 'Ищем прогноз…' : 'Узнать прогноз'}</Button>
             </div>
           </form>
         </div>}
