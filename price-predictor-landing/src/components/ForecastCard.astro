@@ -2,16 +2,16 @@
 import { DEMO, FORECASTS, HISTORY_BARS, LIST_ORDER } from "../data/forecast";
 const f = FORECASTS[0];
 ---
-<div class="flex w-full flex-col overflow-hidden rounded-[20px] bg-white text-left shadow-[0_14px_30px_rgba(3,25,91,.14)] lg:rounded-[24px] lg:shadow-[0_18px_40px_rgba(3,25,91,.14)]">
-  <div class="flex flex-col gap-3 px-4 pt-4 pb-3.5 lg:gap-4 lg:px-6 lg:pt-[22px] lg:pb-[18px]">
+<div class="flex w-full flex-col overflow-hidden rounded-[18px] bg-white text-left shadow-[var(--shadow-card)]">
+  <div class="flex flex-col gap-3 px-5 pt-5 pb-4 lg:gap-4 lg:px-7 lg:pt-7 lg:pb-5">
     <div class="flex items-baseline justify-between">
-      <span class="text-[12px] text-muted lg:text-[15px]">{DEMO.chartTitle}</span>
-      <span class="fc-text text-[15px] font-semibold lg:text-[19px]"><span data-f="arrow">{f.arrow}</span> <span data-f="delta">{f.delta}</span></span>
+      <span class="text-xs text-muted lg:text-sm">{DEMO.chartTitle}</span>
+      <span class="fc-text text-sm font-semibold lg:text-base"><span data-f="arrow">{f.arrow}</span> <span data-f="delta">{f.delta}</span></span>
     </div>
-    <div class="flex h-[84px] items-end gap-1.5 lg:h-[120px] lg:gap-2" aria-hidden="true">
+    <div class="flex h-[72px] items-end gap-1.5 lg:h-[100px] lg:gap-2" aria-hidden="true">
       {f.bars.map((h, n) => (
         <div
-          class:list={["fc-bar flex-1 rounded-[6px] lg:rounded-[8px]", n < HISTORY_BARS && "bg-blue-600"]}
+          class:list={["fc-bar flex-1 rounded-[3px]", n < HISTORY_BARS && "bg-[#cbd3e1]"]}
           data-bar={n}
           data-future={n >= HISTORY_BARS ? "" : undefined}
           style={`height:${h}%`}
@@ -22,14 +22,14 @@ const f = FORECASTS[0];
   <ul class="m-0 list-none p-0">
     {LIST_ORDER.map((k) => (
       <li
-        class="fc-row flex items-center gap-3 border-t border-divider px-4 py-3.5 lg:gap-4 lg:px-6 lg:py-5"
+        class="fc-row flex items-center gap-3 border-t border-divider px-5 py-3.5 lg:gap-4 lg:px-7 lg:py-4"
         data-fc={k}
         data-row={k}
         data-active={k === 0 ? "" : undefined}
       >
-        <span class="fc-chip grid size-9 shrink-0 place-items-center rounded-full text-[17px] font-semibold lg:size-11 lg:text-[20px]" aria-hidden="true">{FORECASTS[k].arrow}</span>
-        <span class="flex-1 text-left text-[16px] font-medium lg:text-[19px]">{FORECASTS[k].listLabel}</span>
-        <span class="text-[13px] text-muted lg:text-[15px]">{FORECASTS[k].advice}</span>
+        <span class="fc-chip grid size-8 shrink-0 place-items-center text-[17px] font-semibold" aria-hidden="true">{FORECASTS[k].arrow}</span>
+        <span class="flex-1 text-left text-sm font-medium lg:text-base">{FORECASTS[k].listLabel}</span>
+        <span class="text-xs text-muted lg:text-sm">{FORECASTS[k].advice}</span>
       </li>
     ))}
   </ul>

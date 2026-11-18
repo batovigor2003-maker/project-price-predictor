@@ -1,7 +1,6 @@
 import { CYCLE_MS, FORECASTS } from "../data/forecast";
 
-// Cycles the demo forecast state: 0 (down) → 1 (up) → 2 (no change).
-// One state drives the hero ticket, the chart and the list highlight.
+// Show each demo forecast state once.
 export function initForecastCycle(): void {
   const root = document.querySelector<HTMLElement>("[data-forecast-root]");
   if (!root) return;
@@ -30,20 +29,7 @@ export function initForecastCycle(): void {
     return;
   }
 
-  let state = 0;
-  let timer: number | undefined;
-  const start = (): void => {
-    if (timer !== undefined) return;
-    timer = window.setInterval(() => {
-      state = (state + 1) % FORECASTS.length;
-      apply(state);
-    }, CYCLE_MS);
-  };
-  const stop = (): void => {
-    window.clearInterval(timer);
-    timer = undefined;
-  };
-
-  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
-  start();
+  for (let state = 1; state < FORECASTS.length; state += 1) {
+    window.setTimeout(() => apply(state), CYCLE_MS * state);
+  }
 }

@@ -3,7 +3,6 @@ import "../styles/global.css";
 import Hero from "../components/Hero.astro";
 import Problem from "../components/Problem.astro";
 import Solution from "../components/Solution.astro";
-import Benefit from "../components/Benefit.astro";
 import FinalCta from "../components/FinalCta.astro";
 
 const title = "Чекбилет — подешевеет ли авиабилет?";
@@ -17,14 +16,13 @@ const description =
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f4faff" />
+    <meta name="theme-color" content="#f3f4f6" />
   </head>
   <body class="m-0">
     <main class="mx-auto max-w-[480px] lg:max-w-none" data-forecast-root data-fc="0">
       <Hero />
       <Problem />
       <Solution />
-      <Benefit />
       <FinalCta />
     </main>
     <script>

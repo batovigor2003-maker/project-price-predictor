@@ -9,29 +9,29 @@
   --color-navy-900: #03195b;
   --color-blue-800: #0b2cb1;
   --color-blue-600: #1951fc;
-  --color-blue-500: #3781fc;
-  --color-sky-200: #cbe9fd;
-  --color-sky-300: #9fcafd;
-  --color-bg: #f4faff;
-  --color-notch: #d6ecfd;
-  --color-line: #dbe6f7;
-  --color-divider: #e6eef9;
-  --color-muted: #5d6c96;
-  --color-accent: #ffd166;
-  --color-accent-hover: #ffe199;
-  --color-down: #2fd189;
-  --color-up: #ff5a6e;
-  --color-flat: #ffd166;
-  --color-loss: #c8243a;        /* loss text and strikethrough */
-  --color-loss-tint: #ffe3e7;   /* loss banner background */
-  --color-loss-soft: #fff5f6;   /* "bought yesterday" card background */
-  --color-loss-border: #ffc9d0; /* "bought yesterday" card border */
+  --color-bg: #f3f4f6;
+  --color-line: #e7e9ed;
+  --color-divider: #e7e9ed;
+  --color-muted: #687385;
+}
+
+:root {
+  --surface: #fff;
+  --field: #f6f7f8;
+  --ink: #172033;
+  --brand: #1951fc;
+  --navy: #03195b;
+  --radius-card: 18px;
+  --shadow-card: 0 5px 24px rgba(20,32,54,.045);
+  --motion-fast: 140ms;
+  --motion-standard: 220ms;
+  --ease-out: cubic-bezier(.2,.75,.2,1);
 }
 
 @layer base {
   body {
     background: var(--color-bg);
-    color: var(--color-navy-900);
+    color: var(--ink);
     font-family: var(--font-sans);
     line-height: normal;
   }
@@ -39,47 +39,24 @@
   p { text-wrap: pretty; }
 }
 
-/* Forecast color coding: main / tint / dark (for text). */
 [data-fc="0"] { --fc-main: #2fd189; --fc-tint: #dcf7ea; --fc-dark: #0f8a52; }
 [data-fc="1"] { --fc-main: #ff5a6e; --fc-tint: #ffe3e7; --fc-dark: #c8243a; }
 [data-fc="2"] { --fc-main: #ffd166; --fc-tint: #fff3d4; --fc-dark: #a87400; }
 
-.fc-text { color: var(--fc-dark); transition: color .4s; }
-.fc-bar { transition: height .6s, background .4s; }
+.fc-text { color: var(--fc-dark); transition: color var(--motion-standard); }
+.fc-bar { transition: height var(--motion-standard) var(--ease-out), background var(--motion-standard); }
 .fc-bar[data-future] { background: var(--fc-main); }
 
-/* Solution list rows: each row has its own colors via data-fc on the row. */
-.fc-row { transition: background .4s; }
-.fc-chip { background: var(--fc-tint); color: var(--fc-dark); transition: background .4s; }
-.fc-row[data-active] { background: var(--fc-tint); }
-.fc-row[data-active] .fc-chip { background: var(--fc-main); color: var(--color-navy-900); }
+.fc-row { transition: background var(--motion-standard); }
+.fc-chip { color: var(--fc-dark); transition: color var(--motion-standard); }
+.fc-row[data-active] { background: #f6f7f8; }
 
 .btn {
-  transition: background-color .2s;
+  transition: background-color var(--motion-fast), transform var(--motion-fast), opacity var(--motion-fast);
 }
+.btn:active { transform: scale(.98); }
 .btn:focus-visible {
-  outline: 3px solid var(--color-navy-900);
-  outline-offset: 2px;
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
 }
-
-/* Hero must fit the viewport so the CTA is visible on the first screen.
-   The ticket illustration shrinks to the free space; on short desktop
-   screens the text and paddings are slightly reduced. */
-.hero-visual { container-type: size; }
-.hero-art { transition: scale .2s; }
-
-@media (max-width: 1023px) {
-  @container (max-height: 160px) { .hero-art { scale: .85; } }
-  @container (max-height: 135px) { .hero-art { scale: .72; } }
-  @container (max-height: 115px) { .hero-art { scale: .6; } }
-}
-@media (min-width: 1024px) {
-  @container (max-height: 215px) { .hero-art { scale: .85; } }
-  @container (max-height: 180px) { .hero-art { scale: .72; } }
-  @container (max-height: 150px) { .hero-art { scale: .6; } }
-}
-@media (min-width: 1024px) and (max-height: 820px) {
-  .hero { gap: 16px; padding-top: 24px; padding-bottom: 40px; }
-  .hero-title { font-size: 48px; }
-  .hero-subtitle { font-size: 18px; }
-}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }

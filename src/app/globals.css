@@ -2,25 +2,100 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face { font-family: Rubik; src: url('/fonts/rubik-cyrillic-400.woff2') format('woff2'); font-style: normal; font-weight: 400; font-display: swap; unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
-@font-face { font-family: Rubik; src: url('/fonts/rubik-latin-400.woff2') format('woff2'); font-style: normal; font-weight: 400; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: Rubik; src: url('/fonts/rubik-cyrillic-500.woff2') format('woff2'); font-style: normal; font-weight: 500; font-display: swap; unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
-@font-face { font-family: Rubik; src: url('/fonts/rubik-latin-500.woff2') format('woff2'); font-style: normal; font-weight: 500; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: Rubik; src: url('/fonts/rubik-cyrillic-600.woff2') format('woff2'); font-style: normal; font-weight: 600; font-display: swap; unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
-@font-face { font-family: Rubik; src: url('/fonts/rubik-latin-600.woff2') format('woff2'); font-style: normal; font-weight: 600; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: Rubik; src: url('/fonts/rubik-cyrillic-700.woff2') format('woff2'); font-style: normal; font-weight: 700; font-display: swap; unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
-@font-face { font-family: Rubik; src: url('/fonts/rubik-latin-700.woff2') format('woff2'); font-style: normal; font-weight: 700; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: Rubik; src: url('/fonts/rubik-cyrillic-400.woff2') format('woff2'); font-weight: 400; font-display: swap; unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: Rubik; src: url('/fonts/rubik-latin-400.woff2') format('woff2'); font-weight: 400; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+FFFD; }
+@font-face { font-family: Rubik; src: url('/fonts/rubik-cyrillic-500.woff2') format('woff2'); font-weight: 500; font-display: swap; unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: Rubik; src: url('/fonts/rubik-latin-500.woff2') format('woff2'); font-weight: 500; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+FFFD; }
+@font-face { font-family: Rubik; src: url('/fonts/rubik-cyrillic-600.woff2') format('woff2'); font-weight: 600; font-display: swap; unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: Rubik; src: url('/fonts/rubik-latin-600.woff2') format('woff2'); font-weight: 600; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+FFFD; }
+@font-face { font-family: Rubik; src: url('/fonts/rubik-cyrillic-700.woff2') format('woff2'); font-weight: 700; font-display: swap; unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: Rubik; src: url('/fonts/rubik-latin-700.woff2') format('woff2'); font-weight: 700; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+FFFD; }
 
-:root { font-family: Rubik, system-ui, sans-serif; }
+:root {
+  font-family: Rubik, system-ui, sans-serif;
+  color-scheme: light;
+  --page: #f3f4f6;
+  --surface: #fff;
+  --field: #f6f7f8;
+  --ink: #172033;
+  --muted: #687385;
+  --line: #e7e9ed;
+  --brand: #1951fc;
+  --brand-hover: #123fd2;
+  --navy: #03195b;
+  --radius-card: 18px;
+  --radius-field: 12px;
+  --shadow-card: 0 5px 24px rgba(20,32,54,.045);
+  --motion-fast: 140ms;
+  --motion-standard: 220ms;
+  --motion-enter: 320ms;
+  --ease-out: cubic-bezier(.2,.75,.2,1);
+}
 html { scroll-behavior: smooth; }
-body { margin: 0; background: #f4faff; }
+body { margin: 0; background: var(--page); color: var(--ink); }
 button, input, select { font: inherit; }
-.hero-gradient { background: linear-gradient(180deg, #f4faff 0%, #cbe9fd 34%, #3781fc 76%, #1951fc 100%); }
-.section-eyebrow { color: #1951fc; font-size: .75rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
-.field-control > input, .field-control > select { width: 100%; height: 48px; border: 1px solid #dbe6f7; border-radius: 16px; background: #f4faff; padding: 0 14px; color: #03195b; outline: none; }
-.field-control > input:focus, .field-control > select:focus { border-color: #1951fc; box-shadow: 0 0 0 3px #cbe9fd; }
-.ticket-divider { position: relative; }
-.ticket-divider::before, .ticket-divider::after { content: ''; position: absolute; top: -11px; width: 20px; height: 20px; border-radius: 50%; background: #cbe9fd; }
-.ticket-divider::before { left: -30px; }
-.ticket-divider::after { right: -30px; }
-.ticket-card .ticket-divider::before, .ticket-card .ticket-divider::after { background: #f4faff; }
+button { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+.app-shell { min-height: 100vh; background: var(--page); color: var(--ink); }
+.app-header { background: var(--brand); color: white; }
+.brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 10px; background: var(--navy); color: white; }
+.search-card, .result-card, .summary-card { background: white; border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
+.search-card { padding: 24px 20px 20px; }
+.field-control { position: relative; }
+.field-control::after { content: ''; position: absolute; right: 19px; top: 23px; width: 8px; height: 8px; border-right: 1.7px solid var(--muted); border-bottom: 1.7px solid var(--muted); transform: rotate(45deg); pointer-events: none; }
+.field-control > select { display: block; width: 100%; min-width: 0; height: 56px; appearance: none; border: 1px solid transparent; border-radius: var(--radius-field); background: var(--field); padding: 0 42px 0 16px; color: var(--ink); font-size: 16px; font-weight: 500; outline: 0; transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast); }
+.route-fields { display: grid; overflow: hidden; border: 1px solid transparent; border-radius: var(--radius-field); background: var(--field); transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast); }
+.route-fields:hover { background: #eef0f4; }
+.route-fields:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(25,81,252,.1); }
+.route-fields > label { min-width: 0; padding: 10px 16px 9px; }
+.route-fields > label + label { border-top: 1px solid var(--line); }
+.route-fields > label > span:first-child { margin-bottom: 1px; color: var(--muted); font-size: 12px; font-weight: 500; }
+.route-fields .field-control::after { top: 11px; right: 3px; }
+.route-fields .field-control > select { height: 32px; border: 0; border-radius: 0; background: transparent; padding: 0 30px 0 0; }
+.route-fields .field-control > select:hover, .route-fields .field-control > select:focus-visible { background: transparent; box-shadow: none; }
+.field-control > select:hover, .date-control:hover, .passenger-trigger:hover { background: #eef0f4; }
+.field-control > select:focus-visible, .date-control:focus-within, .passenger-trigger:focus-visible { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(25,81,252,.1); outline: 0; }
+.date-control, .passenger-trigger { border: 1px solid transparent; border-radius: var(--radius-field); background: var(--field); transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast); }
+.passenger-trigger:active { transform: scale(.99); }
+.action-control { transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast), opacity var(--motion-fast); }
+.action-control:active:not(:disabled) { transform: scale(.98); }
+.action-control:disabled { cursor: not-allowed; opacity: .55; box-shadow: none; }
+.secondary-action { min-height: 44px; border-radius: 10px; color: var(--brand); font-size: 14px; font-weight: 600; }
+.secondary-action:hover { background: #f0f3ff; }
+.passenger-dialog { margin: auto; max-height: min(92dvh,720px); overflow-y: auto; border: 0; border-radius: 18px; background: white; color: var(--ink); box-shadow: 0 20px 60px rgba(10,22,45,.2); }
+.passenger-dialog::backdrop { background: rgba(10,22,45,.42); }
+.passenger-dialog[open] { animation: dialog-enter var(--motion-standard) var(--ease-out) both; }
+.passenger-dialog.is-closing { animation: dialog-exit var(--motion-fast) ease-in both; }
+.counter-button { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 12px; color: var(--brand); transition: background var(--motion-fast), transform var(--motion-fast), opacity var(--motion-fast); }
+.counter-button:hover:not(:disabled) { background: #f0f3ff; }
+.counter-button:active:not(:disabled) { transform: scale(.95); }
+.counter-button:disabled { opacity: .35; cursor: not-allowed; }
+.cabin-option { min-height: 48px; border: 1px solid var(--line); border-radius: 10px; transition: background var(--motion-fast), border-color var(--motion-fast), transform var(--motion-fast); }
+.cabin-option:hover { background: var(--field); }
+.cabin-option:active { transform: scale(.98); }
+.cabin-option[aria-pressed='true'] { border-color: var(--brand); color: var(--brand); background: #f2f5ff; }
+.carousel-track { scrollbar-width: none; }
+.carousel-track::-webkit-scrollbar { display: none; }
+.carousel-card { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 14px; background: white; transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast); }
+.carousel-card:hover { border-color: #bfc9e5; box-shadow: var(--shadow-card); }
+.carousel-card:active { transform: scale(.985); }
+.carousel-arrow { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: white; transition: background var(--motion-fast), transform var(--motion-fast); }
+.carousel-arrow:hover { background: var(--field); }
+.carousel-arrow:active { transform: scale(.96); }
+.result-card { overflow: hidden; }
+.result-enter { animation: result-enter var(--motion-enter) var(--ease-out) both; }
+.result-enter[data-step='prices'] { animation-delay: 90ms; }
+.result-enter[data-step='detail'] { animation-delay: 180ms; }
+.result-prices { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.result-prices > div + div { border-left: 1px solid var(--line); }
+.status-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 7px; padding: 5px 8px; font-size: 12px; font-weight: 600; }
+.status-up { color: #af2940; background: #fdf0f2; }
+.status-down { color: #167a50; background: #eef8f3; }
+.status-flat { color: #86651c; background: #faf6e9; }
+@keyframes result-enter { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes dialog-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes dialog-exit { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(12px); } }
+@media (min-width: 640px) { .search-card { padding: 36px; } .route-fields { grid-template-columns: repeat(2,minmax(0,1fr)); } .route-fields > label + label { border-top: 0; border-left: 1px solid var(--line); } }
+@media (max-width: 359px) { .date-fields { grid-template-columns: 1fr; } }
+@media (max-width: 639px) { .passenger-dialog { width: 100%; max-width: none; max-height: min(88dvh,680px); margin: auto 0 0; border-radius: 18px 18px 0 0; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
