@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { ArrowDownRight, ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Info, Minus, Plus, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { FlightDateCalendar, type DateFieldName, type FlightDates } from './flight-date-calendar';
 import { cities, cityName, cabinClasses, type TicketInput } from '@/lib/demo-data';
 import type { Ticket } from '@/db/schema';
 
@@ -23,6 +24,7 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [formCollapsed, setFormCollapsed] = useState(false);
+  const [calendar, setCalendar] = useState<{ field: DateFieldName; trigger: HTMLButtonElement } | null>(null);
   const [passengerOpen, setPassengerOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -61,6 +63,12 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
     setResult(null);
     setError('');
   };
+
+  function confirmDates(dates: FlightDates) {
+    setForm((previous) => ({ ...previous, ...dates }));
+    setResult(null);
+    setError('');
+  }
 
   async function submit(input = form) {
     setLoading(true);
@@ -135,12 +143,12 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
                 <Field label="Куда"><select value={form.destinationCode} onChange={(e) => set('destinationCode', e.target.value)}>{cities.map((city) => <option key={city.code} value={city.code}>{city.name}</option>)}</select></Field>
               </div>
               <div className="date-fields grid grid-cols-2 gap-3 sm:contents">
-                <DateField label="Дата вылета" value={form.departureDate} required onChange={(value) => set('departureDate', value)}/>
-                <DateField label="Обратно" value={form.returnDate ?? ''} min={form.departureDate} placeholder="Необязательно" clearable onChange={(value) => set('returnDate', value || null)}/>
+                <DateField label="Дата вылета" value={form.departureDate} onClick={(event) => setCalendar({ field: 'departure', trigger: event.currentTarget })}/>
+                <DateField label="Обратно" value={form.returnDate ?? ''} placeholder="Необязательно" onClick={(event) => setCalendar({ field: 'return', trigger: event.currentTarget })}/>
               </div>
             </div>
             <button type="button" className="passenger-trigger mt-3 flex min-h-14 w-full items-center justify-between px-4 py-2.5 text-left sm:mt-4" onClick={() => setPassengerOpen(true)}>
-              <span><span className="block text-xs font-medium text-[var(--muted)]">Пассажиры и класс</span><span className="mt-0.5 block text-sm font-medium sm:text-base">{passengerCount} {passengerWord}, {classNames[form.cabinClass].toLowerCase()}</span></span><ChevronDown size={18} className="shrink-0 text-[var(--muted)]"/>
+              <span><span className="block text-xs font-medium text-[var(--muted)]">Пассажиры и класс</span><span className="mt-0.5 block text-base font-medium">{passengerCount} {passengerWord}, {classNames[form.cabinClass].toLowerCase()}</span></span><ChevronDown size={18} className="shrink-0 text-[var(--muted)]"/>
             </button>
             <div className="mt-3 sm:mt-5">
               <Button variant="highlight" size="lg" disabled={loading} aria-busy={loading} className="w-full text-base">{loading ? 'Ищем прогноз…' : 'Узнать прогноз'}</Button>
@@ -154,6 +162,8 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
         {result && <Forecast key={result.id} ticket={result}/>}
       </section>
     </main>
+
+    {calendar && <FlightDateCalendar value={form} {...calendar} onConfirm={confirmDates} onClose={() => setCalendar(null)}/>}
 
     <dialog ref={dialogRef} onClose={() => setPassengerOpen(false)} onCancel={(event) => { event.preventDefault(); setPassengerOpen(false); }} onClick={(event) => { if (event.target === event.currentTarget) setPassengerOpen(false); }} className="passenger-dialog w-[calc(100%-24px)] max-w-md p-0">
       <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4"><h2 className="text-xl font-semibold">Пассажиры и класс</h2><button type="button" aria-label="Закрыть" onClick={() => setPassengerOpen(false)} className="action-control grid size-11 place-items-center rounded-xl hover:bg-[var(--field)]"><X size={19}/></button></div>
@@ -173,9 +183,22 @@ function Field({ label, children }: { label: string; children: React.ReactElemen
   return <label className="block min-w-0"><span className="mb-2 block text-sm font-medium">{label}</span><div className="field-control">{children}</div></label>;
 }
 
-function DateField({ label, value, onChange, min, required, placeholder = 'Выберите дату', clearable = false }: { label: string; value: string; onChange: (value: string) => void; min?: string; required?: boolean; placeholder?: string; clearable?: boolean }) {
-  const id = useId();
-  return <div className="block min-w-0"><label htmlFor={id} className="mb-2 block text-sm font-medium">{label}</label><div className="date-control relative flex h-14 min-w-0 items-center justify-between gap-1 px-2.5 sm:px-4"><span className={`min-w-0 truncate text-[13px] font-medium sm:text-base ${value ? '' : 'text-[var(--muted)]'}`}><span className="sm:hidden">{value ? compactDate(value) : placeholder === 'Выберите дату' ? 'Выбрать' : placeholder}</span><span className="hidden sm:inline">{value ? fullDate(value) : placeholder}</span></span>{clearable && value ? <button type="button" aria-label="Убрать обратную дату" onClick={() => onChange('')} className="date-clear action-control relative z-10 grid size-9 shrink-0 place-items-center rounded-lg text-[var(--muted)] hover:bg-white"><X size={16} aria-hidden="true"/></button> : <CalendarDays size={16} className="shrink-0 text-[var(--muted)]" aria-hidden="true"/>}<input id={id} type="date" value={value} min={min} required={required} aria-label={label} onChange={(event) => onChange(event.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0"/></div></div>;
+function DateField({ label, value, onClick, placeholder = 'Выберите дату' }: {
+  label: string;
+  value: string;
+  onClick: (event: MouseEvent<HTMLButtonElement>) => void;
+  placeholder?: string;
+}) {
+  return <button type="button" aria-haspopup="dialog" onClick={onClick} className="block min-w-0 text-left">
+    <span className="mb-2 block text-xs font-medium text-[var(--muted)]">{label}</span>
+    <span className="date-control flex h-14 min-w-0 items-center justify-between gap-1 px-2.5 max-[374px]:px-1.5 sm:px-4">
+      <span className={`min-w-0 truncate text-base font-medium ${value ? '' : 'text-[var(--muted)]'}`}>
+        <span className="sm:hidden">{value ? compactDate(value) : placeholder}</span>
+        <span className="hidden sm:inline">{value ? fullDate(value) : placeholder}</span>
+      </span>
+      <CalendarDays size={16} className={`shrink-0 text-[var(--muted)] ${value ? '' : 'hidden sm:block'}`} aria-hidden="true"/>
+    </span>
+  </button>;
 }
 
 function Counter({ label, detail, value, min, max, onChange }: { label: string; detail: string; value: number; min: number; max: number; onChange: (value: number) => void }) {
