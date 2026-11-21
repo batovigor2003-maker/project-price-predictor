@@ -254,10 +254,11 @@ html.date-calendar-open { overflow: hidden; overscroll-behavior: none; }
 .state-enter { animation: state-enter var(--motion-standard) var(--ease-out) both; }
 @keyframes state-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .state-illustration { display: block; width: 108px; height: 108px; object-fit: contain; margin: 0 auto 8px; }
-.state-title { font-size: 24px; line-height: 1.2; font-weight: 700; }
+.search-heading { font-size: 26px; font-weight: 600; line-height: 1.14; letter-spacing: -.035em; }
+@media (min-width: 640px) { .search-heading { font-size: 38px; } }
 .state-description { margin: 8px auto 0; max-width: 33ch; color: var(--muted); font-size: 16px; line-height: 1.45; }
 .state-actions { display: grid; gap: 8px; margin-top: var(--state-gap); }
-.state-screen .state-button { width: 100%; height: auto; min-height: 48px; padding: 9px 12px; border-radius: 14px; font-size: 16px; }
+.state-screen .state-button { width: 100%; height: auto; min-height: 48px; padding: 9px 12px; border-radius: 14px; }
 .state-screen .state-button-secondary { background: var(--state-field); color: var(--ink); }
 .state-screen .state-button-secondary:hover { background: var(--line); }
 
@@ -270,11 +271,8 @@ html.date-calendar-open { overflow: hidden; overscroll-behavior: none; }
   gap: 10px;
   padding: 10px;
   border-radius: 14px;
-  text-align: left;
+  background: var(--state-field);
 }
-.flight-row-placeholder { background: var(--state-field); }
-.flight-row-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--state-skeleton); color: var(--brand); }
-.flight-row-price { font-size: 16px; font-weight: 600; white-space: nowrap; }
 
 .forecast-skeleton { display: grid; gap: 8px; margin-top: var(--state-gap); }
 .forecast-skeleton-prices, .forecast-skeleton-chart {

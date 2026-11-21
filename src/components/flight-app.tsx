@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { FlightDateCalendar, type DateFieldName, type FlightDates } from './flight-date-calendar';
 import { cities, cityName, cabinClasses, type TicketInput } from '@/lib/demo-data';
 import type { Flight, ForecastResult } from '@/lib/search-contract';
-import { FlightRow, InlineEmptyState, StateActions, StateScreen } from './search-states';
+import { InlineEmptyState, StateActions, StateScreen } from './search-states';
 import { useFlightSearch } from './use-flight-search';
 
 const classNames: Record<string, string> = { economy: 'Эконом', comfort: 'Комфорт', business: 'Бизнес', first: 'Первый класс' };
@@ -92,9 +92,8 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
   function searchFeedback() {
     switch (state.status) {
       case 'loading_flights':
-        return <StateScreen kind={state.status}/>;
       case 'loading_forecast':
-        return <StateScreen kind={state.status}><FlightDetails flights={state.flights}/></StateScreen>;
+        return <StateScreen kind={state.status}/>;
       case 'partial_success':
         return <InlineEmptyState onReset={findAnotherFlight}>
           <div className="flight-notes">
@@ -167,7 +166,7 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
         </div>}
         {idle && <div className="search-card">
           <div className="mb-3 max-w-2xl sm:mb-5">
-            <h1 id="search-title" tabIndex={-1} className="text-[26px] font-semibold leading-[1.14] tracking-[-.035em] sm:text-[38px]">Покупать сейчас или подождать?</h1>
+            <h1 id="search-title" tabIndex={-1} className="search-heading">Покупать сейчас или подождать?</h1>
           </div>
           <form onSubmit={(event) => { event.preventDefault(); void submit(form); }}>
             <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
@@ -208,15 +207,6 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
       <div className="border-t border-[var(--line)] p-4"><Button type="button" onClick={() => setPassengerOpen(false)} className="h-12 w-full text-base">Готово</Button></div>
     </dialog>
     <footer className="border-t border-[var(--line)] bg-white px-5 py-7 text-center text-xs leading-5 text-[var(--muted)]">Чекбилет · Демонстрация на синтетических данных. Цены и прогнозы вымышлены, качество на реальных ценах пока не проверено.</footer>
-  </div>;
-}
-
-function FlightDetails({ flights }: { flights: Flight[] }) {
-  return <div className="flight-rows">
-    {flights.map((flight) => <FlightRow key={flight.id} price={money(flight.currentPriceRub)}>
-      <p className="text-sm font-semibold">{cityName(flight.originCode)} → {cityName(flight.destinationCode)}</p>
-      <p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(flight.departureDate)}{flight.returnDate && ` — ${dateLabel(flight.returnDate)}`} · {classNames[flight.cabinClass]}</p>
-    </FlightRow>)}
   </div>;
 }
 
