@@ -22,7 +22,10 @@ export function TicketResults({ tickets, forecasts }: {
   forecasts: Record<string, TicketForecast>;
 }) {
   return <section id="forecast" aria-label="Найденные билеты" className="search-result-width mt-2">
-    <p className="mb-2 px-1 text-center text-xs leading-5 text-[var(--muted)]">Прогноз показывает вероятность изменения цены до дня вылета</p>
+    <p className="mb-2 px-1 text-center text-xs leading-5 text-[var(--muted)] max-[350px]:text-[11px]">
+      Прогноз показывает вероятность изменения цены<br/>
+      от сегодня до дня вылета
+    </p>
     <ul className="grid gap-2.5">
       {tickets.map((ticket) => <li key={ticket.id}><TicketCard ticket={ticket} forecast={forecasts[ticket.id]}/></li>)}
     </ul>

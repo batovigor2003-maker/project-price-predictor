@@ -12,8 +12,8 @@ import { useFlightSearch } from './use-flight-search';
 
 const classNames: Record<string, string> = { economy: 'Эконом', comfort: 'Комфорт', business: 'Бизнес', first: 'Первый класс' };
 const dateLabel = (value: string) => new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' }).format(new Date(value + 'T12:00:00'));
-const fullDate = (value: string) => new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(value + 'T12:00:00'));
-const compactDate = (value: string) => new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(new Date(value + 'T12:00:00'));
+const weekdayFormat = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' });
+const dateFieldLabel = (value: string) => `${dateLabel(value).replace(/\.$/, '')}, ${weekdayFormat.format(new Date(value + 'T12:00:00'))}`;
 const fromTicket = (ticket: Flight): TicketInput => ({ originCode: ticket.originCode, destinationCode: ticket.destinationCode, departureDate: ticket.departureDate, returnDate: ticket.returnDate, adults: ticket.adults, children: ticket.children, infants: ticket.infants, cabinClass: ticket.cabinClass });
 
 export function FlightApp({ tickets }: { tickets: Flight[] }) {
@@ -171,12 +171,13 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
                 <Field label="Куда"><select value={form.destinationCode} onChange={(e) => set('destinationCode', e.target.value)}>{cities.map((city) => <option key={city.code} value={city.code}>{city.name}</option>)}</select></Field>
               </div>
               <div className="date-fields grid grid-cols-2 gap-3 sm:contents">
-                <DateField label="Дата вылета" value={form.departureDate} onClick={(event) => setCalendar({ field: 'departure', trigger: event.currentTarget })}/>
-                <DateField label="Обратно" value={form.returnDate ?? ''} placeholder="Необязательно" onClick={(event) => setCalendar({ field: 'return', trigger: event.currentTarget })}/>
+                <DateField label="Туда" value={form.departureDate} onClick={(event) => setCalendar({ field: 'departure', trigger: event.currentTarget })}/>
+                <DateField label="Обратно" value={form.returnDate ?? ''} placeholder="Выбрать" onClick={(event) => setCalendar({ field: 'return', trigger: event.currentTarget })}/>
               </div>
             </div>
-            <button type="button" className="passenger-trigger mt-3 flex min-h-14 w-full items-center justify-between px-4 py-2.5 text-left sm:mt-4" onClick={() => setPassengerOpen(true)}>
-              <span><span className="block text-xs font-medium text-[var(--muted)]">Пассажиры и класс</span><span className="mt-0.5 block text-base font-medium">{passengerCount} {passengerWord}, {classNames[form.cabinClass].toLowerCase()}</span></span><ChevronDown size={18} className="shrink-0 text-[var(--muted)]"/>
+            <button type="button" aria-haspopup="dialog" className="passenger-trigger mt-3 flex min-h-14 w-full items-center justify-between px-4 py-2.5 text-left sm:mt-4" onClick={() => setPassengerOpen(true)}>
+              <span className="text-base font-medium">{passengerCount} {passengerWord}, {classNames[form.cabinClass].toLowerCase()}</span>
+              <ChevronDown size={18} className="shrink-0 text-[var(--muted)]" aria-hidden="true"/>
             </button>
             <div className="mt-3 sm:mt-5">
               {state.invalid && <p role="alert" className="mb-3 text-sm text-[#a03232]">Проверьте маршрут, даты и пассажиров.</p>}
@@ -202,7 +203,7 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
       </div>
       <div className="border-t border-[var(--line)] p-4"><Button type="button" onClick={() => setPassengerOpen(false)} className="h-12 w-full text-base">Готово</Button></div>
     </dialog>
-    <footer className="border-t border-[var(--line)] bg-white px-5 py-7 text-center text-xs leading-5 text-[var(--muted)]">Демо на тестовых данных</footer>
+    <footer className="px-5 py-7 text-center text-xs leading-5 text-[var(--muted)]">Демо на тестовых данных</footer>
   </div>;
 }
 
@@ -216,15 +217,14 @@ function DateField({ label, value, onClick, placeholder = 'Выберите да
   onClick: (event: MouseEvent<HTMLButtonElement>) => void;
   placeholder?: string;
 }) {
-  return <button type="button" aria-haspopup="dialog" onClick={onClick} className="block min-w-0 text-left">
-    <span className="mb-2 block text-xs font-medium text-[var(--muted)]">{label}</span>
-    <span className="date-control flex h-14 min-w-0 items-center justify-between gap-1 px-2.5 max-[374px]:px-1.5 sm:px-4">
-      <span className={`min-w-0 truncate text-base font-medium ${value ? '' : 'text-[var(--muted)]'}`}>
-        <span className="sm:hidden">{value ? compactDate(value) : placeholder}</span>
-        <span className="hidden sm:inline">{value ? fullDate(value) : placeholder}</span>
+  return <button type="button" aria-haspopup="dialog" onClick={onClick} className="date-control flex min-h-14 min-w-0 items-center justify-between gap-1 py-2 pl-4 pr-2.5 text-left sm:pr-4">
+    <span className="min-w-0">
+      <span className="block text-xs font-medium text-[var(--muted)]">{label}</span>
+      <span className={`block truncate text-base font-medium max-[350px]:text-[15px] ${value ? '' : 'text-[var(--muted)]'}`}>
+        {value ? dateFieldLabel(value) : placeholder}
       </span>
-      <CalendarDays size={16} className={`shrink-0 text-[var(--muted)] ${value ? '' : 'hidden sm:block'}`} aria-hidden="true"/>
     </span>
+    <CalendarDays size={16} className={`shrink-0 text-[var(--muted)] ${value ? 'max-[350px]:hidden' : 'hidden sm:block'}`} aria-hidden="true"/>
   </button>;
 }
 
