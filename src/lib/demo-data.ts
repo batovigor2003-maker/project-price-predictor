@@ -33,7 +33,14 @@ export function dateAfter(days: number, now = new Date()): string {
   return formatDate(date);
 }
 
-export function demoTickets(now = new Date()): Ticket[] {
+export type ForecastTicket = Ticket & {
+  predictedPriceRub: number;
+  changePercent: number;
+  direction: string;
+  advice: string;
+};
+
+export function demoTickets(now = new Date()): ForecastTicket[] {
   return Array.from({ length: 100 }, (_, index) => {
     const routeIndex = Math.floor(index / 10);
     const dateIndex = index % 10;

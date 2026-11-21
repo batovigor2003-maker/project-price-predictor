@@ -5,25 +5,25 @@ import { ArrowDownRight, ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronD
 import { Button } from './ui/button';
 import { FlightDateCalendar, type DateFieldName, type FlightDates } from './flight-date-calendar';
 import { cities, cityName, cabinClasses, type TicketInput } from '@/lib/demo-data';
-import type { Ticket } from '@/db/schema';
+import type { Flight, ForecastResult } from '@/lib/search-contract';
+import { FlightRow, InlineEmptyState, StateActions, StateScreen } from './search-states';
+import { useFlightSearch } from './use-flight-search';
 
-type DisplayTicket = Omit<Ticket, 'createdAt'>;
 const classNames: Record<string, string> = { economy: 'Эконом', comfort: 'Комфорт', business: 'Бизнес', first: 'Первый класс' };
 const money = (value: number) => new Intl.NumberFormat('ru-RU').format(value) + ' ₽';
 const dateLabel = (value: string) => new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' }).format(new Date(value + 'T12:00:00'));
 const fullDate = (value: string) => new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(value + 'T12:00:00'));
 const compactDate = (value: string) => new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(new Date(value + 'T12:00:00'));
-const fromTicket = (ticket: DisplayTicket): TicketInput => ({ originCode: ticket.originCode, destinationCode: ticket.destinationCode, departureDate: ticket.departureDate, returnDate: ticket.returnDate, adults: ticket.adults, children: ticket.children, infants: ticket.infants, cabinClass: ticket.cabinClass });
+const fromTicket = (ticket: Flight): TicketInput => ({ originCode: ticket.originCode, destinationCode: ticket.destinationCode, departureDate: ticket.departureDate, returnDate: ticket.returnDate, adults: ticket.adults, children: ticket.children, infants: ticket.infants, cabinClass: ticket.cabinClass });
 
-export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
-  const [form, setForm] = useState<TicketInput>(() => ({
+export function FlightApp({ tickets }: { tickets: Flight[] }) {
+  const initialForm = {
     ...fromTicket(tickets.find((ticket) => ticket.returnDate === null) ?? tickets[0]),
     returnDate: null,
-  }));
-  const [result, setResult] = useState<DisplayTicket | null>(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [formCollapsed, setFormCollapsed] = useState(false);
+  };
+  const [form, setForm] = useState<TicketInput>(initialForm);
+  const { state, reset, submit } = useFlightSearch();
+  const previousStatus = useRef(state.status);
   const [calendar, setCalendar] = useState<{ field: DateFieldName; trigger: HTMLButtonElement } | null>(null);
   const [passengerOpen, setPassengerOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -54,45 +54,72 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
     }
   }, [passengerOpen]);
 
+  useEffect(() => {
+    if (previousStatus.current === state.status) return;
+    const previous = previousStatus.current;
+    previousStatus.current = state.status;
+    if (previous === 'idle' || state.status === 'idle') window.scrollTo({ top: 0, behavior: 'instant' });
+    document.getElementById('search-title')?.focus({ preventScroll: true });
+  }, [state.status]);
+
   const set = <K extends keyof TicketInput>(key: K, value: TicketInput[K]) => {
     setForm((previous) => {
       const next = { ...previous, [key]: value };
       if (key === 'adults') next.infants = Math.min(next.infants, Number(value));
       return next;
     });
-    setResult(null);
-    setError('');
+    if (state.status === 'idle' && state.invalid) reset();
   };
 
   function confirmDates(dates: FlightDates) {
     setForm((previous) => ({ ...previous, ...dates }));
-    setResult(null);
-    setError('');
+    if (state.status === 'idle' && state.invalid) reset();
   }
 
-  async function submit(input = form) {
-    setLoading(true);
-    setResult(null);
-    setError('');
-    try {
-      const response = await fetch('/api/forecast', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error ?? 'Не удалось получить прогноз.');
-      setResult(payload.ticket);
-      setFormCollapsed(true);
-      requestAnimationFrame(() => document.getElementById('search')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Не удалось получить прогноз.');
-    } finally {
-      setLoading(false);
-    }
+  function findAnotherFlight() {
+    reset();
+    setForm(initialForm);
   }
 
-  function selectTicket(ticket: DisplayTicket) {
+  function selectTicket(ticket: Flight) {
     const input = fromTicket(ticket);
     setForm(input);
     void submit(input);
   }
+
+  const findAnotherAction = { label: 'Найти другой рейс', onClick: findAnotherFlight };
+
+  function searchFeedback() {
+    switch (state.status) {
+      case 'loading_flights':
+        return <StateScreen kind={state.status}/>;
+      case 'loading_forecast':
+        return <StateScreen kind={state.status}><FlightDetails flights={state.flights}/></StateScreen>;
+      case 'partial_success':
+        return <InlineEmptyState onReset={findAnotherFlight}>
+          <div className="flight-notes">
+            {state.flights.map((flight) => <p key={flight.id}>
+              {cityName(flight.originCode)} → {cityName(flight.destinationCode)} · {money(flight.currentPriceRub)}
+            </p>)}
+          </div>
+        </InlineEmptyState>;
+      case 'no_flights':
+        return <StateScreen kind={state.status} actions={<StateActions
+          primary={{ label: 'Изменить поиск', onClick: reset }}
+        />}/>;
+      case 'network_error':
+      case 'service_error':
+        return <StateScreen kind={state.status} actions={<StateActions
+          primary={{ label: 'Попробовать ещё раз', onClick: () => void submit(state.input, state.stage) }}
+          secondary={findAnotherAction}
+        />}/>;
+      default:
+        return null;
+    }
+  }
+
+  const idle = state.status === 'idle';
+  const feedback = !idle && state.status !== 'success';
 
   function moveCarousel(direction: -1 | 1) {
     const track = carouselRef.current;
@@ -103,16 +130,21 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
     });
   }
 
-  return <div className="app-shell">
-    <header className="app-header px-4 sm:px-6">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3">
-        <a href="/" className="flex items-center gap-2.5 text-base font-semibold tracking-tight"><span className="brand-mark" aria-hidden="true"><span className="size-2 rounded-full bg-white"/></span>Чекбилет</a>
+  return <div className={feedback ? 'app-shell app-shell-feedback' : 'app-shell'}>
+    <header className="app-header">
+      <div className="app-header-content mx-auto flex max-w-6xl items-center justify-between gap-3">
+        <a href="/" onClick={(event) => {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          findAnotherFlight();
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }} className="flex items-center gap-2.5 text-base font-semibold tracking-tight"><span className="brand-mark" aria-hidden="true"><span className="size-2 rounded-full bg-white"/></span>Чекбилет</a>
         <span className="text-[11px] font-medium text-white/80 sm:text-xs">Демо на тестовых данных</span>
       </div>
     </header>
 
-    <main className="mx-auto max-w-[960px] px-4 pb-6 sm:px-6 sm:pb-8">
-      <section className="pt-4 sm:pt-6" aria-labelledby="carousel-title">
+    <main className={`app-main mx-auto max-w-[960px] ${feedback ? 'app-main-feedback' : 'pb-6 sm:pb-8'}`}>
+      {idle && <section className="pt-4 sm:pt-6" aria-labelledby="carousel-title">
         <div className="mb-1 flex items-center justify-between gap-3">
           <h2 id="carousel-title" className="text-lg font-bold leading-tight tracking-tight sm:text-2xl">Что ищут другие 👀</h2>
           <div className="hidden gap-2 sm:flex">
@@ -126,17 +158,18 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
             <span className="text-[13px] font-bold sm:text-sm">{cityName(ticket.originCode)} — {cityName(ticket.destinationCode)}</span>
           </button>)}
         </div>
-      </section>
+      </section>}
 
-      <section id="search" className="scroll-mt-4 pt-3 sm:pt-5" aria-labelledby="search-title">
-        {formCollapsed && result ? <div className="summary-card result-enter grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:px-6">
-          <div className="break-words"><p className="text-xs font-medium text-[var(--muted)]">Ваш билет</p><h1 id="search-title" className="mt-1 text-lg font-semibold sm:text-xl">{cityName(form.originCode)} <ArrowRight className="inline size-4 text-[var(--brand)]"/> {cityName(form.destinationCode)}</h1><p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(form.departureDate)}{form.returnDate && ` — ${dateLabel(form.returnDate)}`} · {passengerCount} {passengerWord} · {classNames[form.cabinClass].toLowerCase()}</p></div>
-          <button type="button" onClick={() => setFormCollapsed(false)} className="action-control secondary-action whitespace-nowrap px-3">Изменить</button>
-        </div> : <div className="search-card">
+      <section id="search" className={feedback ? undefined : 'scroll-mt-4 pt-3 sm:pt-5'} aria-labelledby="search-title">
+        {state.status === 'success' && <div className="summary-card search-result-width state-enter grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:px-6">
+          <div className="break-words"><p className="text-xs font-medium text-[var(--muted)]">Ваш билет</p><h1 id="search-title" tabIndex={-1} className="mt-1 text-lg font-semibold sm:text-xl">{cityName(form.originCode)} <ArrowRight className="inline size-4 text-[var(--brand)]"/> {cityName(form.destinationCode)}</h1><p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(form.departureDate)}{form.returnDate && ` — ${dateLabel(form.returnDate)}`} · {passengerCount} {passengerWord} · {classNames[form.cabinClass].toLowerCase()}</p></div>
+          <button type="button" onClick={reset} className="action-control secondary-action whitespace-nowrap px-3">Изменить</button>
+        </div>}
+        {idle && <div className="search-card">
           <div className="mb-3 max-w-2xl sm:mb-5">
-            <h1 id="search-title" className="text-[26px] font-semibold leading-[1.14] tracking-[-.035em] sm:text-[38px]">Покупать сейчас или подождать?</h1>
+            <h1 id="search-title" tabIndex={-1} className="text-[26px] font-semibold leading-[1.14] tracking-[-.035em] sm:text-[38px]">Покупать сейчас или подождать?</h1>
           </div>
-          <form onSubmit={(event) => { event.preventDefault(); void submit(); }}>
+          <form onSubmit={(event) => { event.preventDefault(); void submit(form); }}>
             <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               <div className="route-fields sm:col-span-2">
                 <Field label="Откуда"><select value={form.originCode} onChange={(e) => set('originCode', e.target.value)}>{cities.map((city) => <option key={city.code} value={city.code}>{city.name}</option>)}</select></Field>
@@ -151,16 +184,15 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
               <span><span className="block text-xs font-medium text-[var(--muted)]">Пассажиры и класс</span><span className="mt-0.5 block text-base font-medium">{passengerCount} {passengerWord}, {classNames[form.cabinClass].toLowerCase()}</span></span><ChevronDown size={18} className="shrink-0 text-[var(--muted)]"/>
             </button>
             <div className="mt-3 sm:mt-5">
-              <Button variant="highlight" size="lg" disabled={loading} aria-busy={loading} className="w-full text-base">{loading ? 'Ищем прогноз…' : 'Узнать прогноз'}</Button>
+              {state.invalid && <p role="alert" className="mb-3 text-sm text-[#a03232]">Проверьте маршрут, даты и пассажиров.</p>}
+              <Button variant="highlight" size="lg" className="w-full text-base">Узнать прогноз</Button>
             </div>
           </form>
         </div>}
+        {searchFeedback()}
       </section>
 
-      <section id="forecast" aria-live="polite" className="pt-3 empty:pt-0 sm:pt-5 sm:empty:pt-0">
-        {error && <div className="rounded-2xl border border-[#ffd9d9] bg-[#fff5f5] p-5 text-[#a03232]">{error}</div>}
-        {result && <Forecast key={result.id} ticket={result}/>}
-      </section>
+      {state.status === 'success' && <div id="forecast" className="search-result-width mt-3 sm:mt-5"><Forecast ticket={state.forecast}/></div>}
     </main>
 
     {calendar && <FlightDateCalendar value={form} {...calendar} onConfirm={confirmDates} onClose={() => setCalendar(null)}/>}
@@ -176,6 +208,15 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
       <div className="border-t border-[var(--line)] p-4"><Button type="button" onClick={() => setPassengerOpen(false)} className="h-12 w-full text-base">Готово</Button></div>
     </dialog>
     <footer className="border-t border-[var(--line)] bg-white px-5 py-7 text-center text-xs leading-5 text-[var(--muted)]">Чекбилет · Демонстрация на синтетических данных. Цены и прогнозы вымышлены, качество на реальных ценах пока не проверено.</footer>
+  </div>;
+}
+
+function FlightDetails({ flights }: { flights: Flight[] }) {
+  return <div className="flight-rows">
+    {flights.map((flight) => <FlightRow key={flight.id} price={money(flight.currentPriceRub)}>
+      <p className="text-sm font-semibold">{cityName(flight.originCode)} → {cityName(flight.destinationCode)}</p>
+      <p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(flight.departureDate)}{flight.returnDate && ` — ${dateLabel(flight.returnDate)}`} · {classNames[flight.cabinClass]}</p>
+    </FlightRow>)}
   </div>;
 }
 
@@ -205,13 +246,13 @@ function Counter({ label, detail, value, min, max, onChange }: { label: string; 
   return <div className="flex items-center justify-between border-b border-[var(--line)] py-4"><div><p className="font-medium">{label}</p><p className="mt-0.5 text-xs text-[var(--muted)]">{detail}</p></div><div className="flex items-center gap-2"><button type="button" aria-label={`Уменьшить: ${label.toLowerCase()}`} disabled={value <= min} onClick={() => onChange(value - 1)} className="counter-button"><Minus size={17}/></button><span className="w-5 text-center font-semibold">{value}</span><button type="button" aria-label={`Увеличить: ${label.toLowerCase()}`} disabled={value >= max} onClick={() => onChange(value + 1)} className="counter-button"><Plus size={17}/></button></div></div>;
 }
 
-function DirectionBadge({ ticket }: { ticket: DisplayTicket }) {
+function DirectionBadge({ ticket }: { ticket: ForecastResult }) {
   const up = ticket.direction === 'up'; const down = ticket.direction === 'down';
   const Icon = up ? ArrowUpRight : down ? ArrowDownRight : ArrowRight;
   return <span className={`status-badge ${up ? 'status-up' : down ? 'status-down' : 'status-flat'}`}><Icon size={14}/>{up ? 'Вырастет' : down ? 'Снизится' : 'Почти без изменений'}</span>;
 }
 
-function Forecast({ ticket }: { ticket: DisplayTicket }) {
+function Forecast({ ticket }: { ticket: ForecastResult }) {
   const up = ticket.direction === 'up'; const down = ticket.direction === 'down';
   const advice = up ? 'Покупайте сейчас' : down ? 'Лучше подождать' : 'Можно подождать';
   const reason = up ? `Тестовый сценарий: цена вырастет на ${ticket.changePercent}% за 7 дней.` : down ? `Тестовый сценарий: цена снизится на ${Math.abs(ticket.changePercent)}% за 7 дней.` : `Тестовый сценарий: изменение на ${Math.abs(ticket.changePercent)}% укладывается в порог ±5%.`;

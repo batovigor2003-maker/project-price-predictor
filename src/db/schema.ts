@@ -11,10 +11,10 @@ export const tickets = pgTable('tickets', {
   infants: integer('infants').notNull(),
   cabinClass: text('cabin_class').notNull(),
   currentPriceRub: integer('current_price_rub').notNull(),
-  predictedPriceRub: integer('predicted_price_rub').notNull(),
-  changePercent: integer('change_percent').notNull(),
-  direction: text('direction').notNull(),
-  advice: text('advice').notNull(),
+  predictedPriceRub: integer('predicted_price_rub'),
+  changePercent: integer('change_percent'),
+  direction: text('direction'),
+  advice: text('advice'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
