@@ -1,0 +1,66 @@
+name: Deploy Checkbilet
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: checkbilet-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE_REPOSITORY: ghcr.io/batovigor2003-maker/project-price-predictor
+      DEPLOY_TARGET: checkbilet@157.22.204.85
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Check the project
+        run: |
+          npm install --global pnpm@12.21.0
+          pnpm install --frozen-lockfile
+          pnpm typecheck
+          pnpm test
+          bash -n deploy/release.sh
+          bash -n deploy/bootstrap-server.sh
+      - name: Build and publish the release image
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: |
+          docker build -f deploy/Dockerfile --build-arg "RELEASE_SHA=$GITHUB_SHA" \
+            --tag "$IMAGE_REPOSITORY:$GITHUB_SHA" .
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "$IMAGE_REPOSITORY:$GITHUB_SHA"
+      - name: Upload and deploy this commit
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: |
+          umask 077
+          credentials=$(mktemp -d)
+          trap 'rm -rf -- "$credentials"' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$credentials/key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$credentials/known_hosts"
+          ssh_options=(-i "$credentials/key" -o IdentitiesOnly=yes -o BatchMode=yes
+            -o StrictHostKeyChecking=yes -o GlobalKnownHostsFile=/dev/null
+            -o "UserKnownHostsFile=$credentials/known_hosts" -o ConnectTimeout=15)
+          release="checkbilet-deploy/releases/$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          tar -C deploy -czf - compose.yaml release.sh |
+            ssh "${ssh_options[@]}" "$DEPLOY_TARGET" "umask 077; mkdir -p '$release' && tar -xzf - -C '$release'"
+          printf '%s' "$REGISTRY_TOKEN" |
+            ssh "${ssh_options[@]}" "$DEPLOY_TARGET" "bash '$release/release.sh' '$GITHUB_SHA' '$GITHUB_ACTOR'"
