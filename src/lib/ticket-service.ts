@@ -18,6 +18,7 @@ export async function listTickets(): Promise<{ tickets: Ticket[]; source: 'datab
 
 export async function findTicket(input: TicketInput): Promise<Ticket | null> {
   const db = getDb();
+  const demoTicket = demoTickets().find((ticket) => matchesTicket(ticket, input)) ?? null;
   if (db) {
     try {
       const rows = await db.select().from(tickets).where(and(
@@ -28,9 +29,9 @@ export async function findTicket(input: TicketInput): Promise<Ticket | null> {
         eq(tickets.infants, input.infants), eq(tickets.cabinClass, input.cabinClass),
       )).limit(1);
       if (rows[0]) return rows[0];
-    } catch {
-      // The demo lookup remains available when PostgreSQL is offline or not migrated.
+    } catch (error) {
+      if (!demoTicket) throw error;
     }
   }
-  return demoTickets().find((ticket) => matchesTicket(ticket, input)) ?? null;
+  return demoTicket;
 }
