@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import { Plane } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Button } from './ui/button';
 
@@ -53,8 +52,8 @@ export function StateIllustration({ kind }: { kind: StateKind }) {
 
 export function StateActions({ primary, secondary }: { primary: StateAction; secondary?: StateAction }) {
   return <div className="state-actions">
-    <Button type="button" onClick={primary.onClick} className="state-button">{primary.label}</Button>
-    {secondary && <Button type="button" onClick={secondary.onClick} className="state-button state-button-secondary">{secondary.label}</Button>}
+    <Button type="button" onClick={primary.onClick} className="state-button text-base">{primary.label}</Button>
+    {secondary && <Button type="button" onClick={secondary.onClick} className="state-button state-button-secondary text-base">{secondary.label}</Button>}
   </div>;
 }
 
@@ -63,7 +62,7 @@ export function StateScreen({ kind, actions, children }: { kind: StateKind; acti
   return <div key={kind} className="state-screen state-enter">
     <StateIllustration kind={kind}/>
     <div>
-      <h1 id="search-title" tabIndex={-1} aria-describedby="state-description" className="state-title">{title}</h1>
+      <h1 id="search-title" tabIndex={-1} aria-describedby="state-description" className="search-heading">{title}</h1>
       <p id="state-description" className="state-description">{description}</p>
     </div>
     {kind === 'loading_flights' && <FlightSkeleton/>}
@@ -82,22 +81,16 @@ export function InlineEmptyState({ children, onReset }: { children: ReactNode; o
   </StateScreen>;
 }
 
-export function FlightRow({ children, price, placeholder = false }: { children: ReactNode; price: ReactNode; placeholder?: boolean }) {
-  return <div className={placeholder ? 'flight-row flight-row-placeholder' : 'flight-row'}>
-    <span className={`flight-row-icon${placeholder ? ' state-shimmer' : ''}`} aria-hidden="true">
-      {!placeholder && <Plane size={19}/>}
-    </span>
-    <div className="min-w-0">{children}</div>
-    <div className="flight-row-price">{price}</div>
-  </div>;
-}
-
 export function FlightSkeleton() {
   return <div className="flight-rows" aria-hidden="true">
-    {[0, 1].map((row) => <FlightRow key={row} placeholder price={<span className="state-shimmer h-4 w-12 sm:w-16"/>}>
-      <span className="state-shimmer h-3 w-3/4"/>
-      <span className="state-shimmer mt-2 h-2 w-1/2"/>
-    </FlightRow>)}
+    {[0, 1].map((row) => <div key={row} className="flight-row">
+      <span className="state-shimmer size-9"/>
+      <div className="min-w-0">
+        <span className="state-shimmer h-3 w-3/4"/>
+        <span className="state-shimmer mt-2 h-2 w-1/2"/>
+      </div>
+      <span className="state-shimmer h-4 w-12 sm:w-16"/>
+    </div>)}
   </div>;
 }
 

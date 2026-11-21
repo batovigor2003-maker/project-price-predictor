@@ -9,8 +9,7 @@ type SearchStage = { step: 'flights' } | { step: 'forecast'; flights: Flight[] }
 
 type SearchState =
   | { status: 'idle'; invalid?: boolean }
-  | { status: 'loading_flights' | 'no_flights' }
-  | { status: 'loading_forecast'; flights: Flight[] }
+  | { status: 'loading_flights' | 'loading_forecast' | 'no_flights' }
   | { status: 'success'; forecast: ForecastResult }
   | { status: 'partial_success'; flights: Flight[]; forecast: 'no_prediction' }
   | { status: 'network_error' | 'service_error'; stage: SearchStage; input: TicketInput };
@@ -51,7 +50,7 @@ export function useFlightSearch() {
       }
 
       const { flights } = stage;
-      setState({ status: 'loading_forecast', flights });
+      setState({ status: 'loading_forecast' });
       const forecast = await requestSearch<ForecastResponse>('/api/forecast', input, controller.signal);
       if (!isCurrent()) return;
 
