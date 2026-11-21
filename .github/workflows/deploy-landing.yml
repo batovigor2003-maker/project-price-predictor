@@ -1,0 +1,85 @@
+name: Deploy Checkbilet landing
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'price-predictor-landing/**'
+      - 'deploy/landing/**'
+      - '.github/workflows/deploy-landing.yml'
+
+concurrency:
+  group: checkbilet-landing-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      DEPLOY_TARGET: checkbilet@157.22.204.85
+      LANDING_URL: https://checkbilet.ru
+      PUBLIC_APP_URL: https://app.checkbilet.ru
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Build and check the static site
+        run: |
+          bash -n deploy/landing/bootstrap-server.sh
+          bash -n deploy/landing/receive.sh
+          npm install --global pnpm@12.21.0
+          git archive "$GITHUB_SHA" price-predictor-landing | tar -xf - -C "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/price-predictor-landing"
+          pnpm install --frozen-lockfile
+          pnpm build
+          test -s dist/index.html
+          grep -Fq -- "$PUBLIC_APP_URL" dist/index.html
+          printf '%s\n' "$GITHUB_SHA" > dist/release-sha.txt
+      - name: Publish and verify the live landing page
+        env:
+          LANDING_SSH_KEY: ${{ secrets.LANDING_SSH_KEY }}
+          LANDING_KNOWN_HOSTS: ${{ secrets.LANDING_KNOWN_HOSTS }}
+        run: |
+          main_ref=$(git ls-remote --exit-code origin refs/heads/main)
+          current_sha=${main_ref%%$'\t'*}
+          if [[ $current_sha != "$GITHUB_SHA" ]]; then
+            git fetch --no-tags --depth=1 origin "$current_sha"
+            if ! git diff --quiet "$GITHUB_SHA" "$current_sha" -- price-predictor-landing deploy/landing .github/workflows/deploy-landing.yml; then
+              echo 'A newer landing change is on main. Skipping this release.'
+              exit 0
+            fi
+          fi
+
+          umask 077
+          credentials=$(mktemp -d)
+          trap 'rm -rf -- "$credentials"' EXIT
+          printf '%s\n' "$LANDING_SSH_KEY" > "$credentials/key"
+          printf '%s\n' "$LANDING_KNOWN_HOSTS" > "$credentials/known_hosts"
+          ssh_options=(-i "$credentials/key" -o IdentitiesOnly=yes -o BatchMode=yes
+            -o StrictHostKeyChecking=yes -o GlobalKnownHostsFile=/dev/null
+            -o "UserKnownHostsFile=$credentials/known_hosts" -o ConnectTimeout=15)
+          release="$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          dist="$RUNNER_TEMP/price-predictor-landing/dist"
+          tar -C "$dist" -czf - . |
+            ssh "${ssh_options[@]}" "$DEPLOY_TARGET" "publish $release"
+
+          curl -fsS --max-time 8 --retry 4 --retry-all-errors --retry-max-time 40 \
+            "$LANDING_URL/release-sha.txt" > "$credentials/live-sha.txt"
+          cmp "$dist/release-sha.txt" "$credentials/live-sha.txt"
+          status=$(curl -fsS --max-time 8 --retry 4 --retry-all-errors --retry-max-time 40 \
+            --output "$credentials/live.html" --write-out '%{http_code}' "$LANDING_URL/")
+          test "$status" = 200
+          cmp "$dist/index.html" "$credentials/live.html"
+          printf 'Public HTTPS /: HTTP %s, release %s\n' "$status" "$GITHUB_SHA"
