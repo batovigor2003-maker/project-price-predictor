@@ -11,6 +11,10 @@ concurrency:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   deploy:
     runs-on: ubuntu-24.04
@@ -51,6 +55,11 @@ jobs:
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           REGISTRY_TOKEN: ${{ github.token }}
         run: |
+          main_ref=$(git ls-remote --exit-code origin refs/heads/main)
+          if [[ ${main_ref%%$'\t'*} != "$GITHUB_SHA" ]]; then
+            echo 'A newer commit is on main. Skipping server deployment.'
+            exit 0
+          fi
           umask 077
           credentials=$(mktemp -d)
           trap 'rm -rf -- "$credentials"' EXIT
