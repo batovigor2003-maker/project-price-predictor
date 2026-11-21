@@ -2,6 +2,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import { tickets, type Ticket } from '@/db/schema';
 import { demoTickets, matchesTicket, type TicketInput } from './demo-data';
+import { demoResults } from './demo-results';
 
 export async function listTickets(): Promise<{ tickets: Ticket[]; source: 'database' | 'demo' }> {
   const db = getDb();
@@ -16,7 +17,7 @@ export async function listTickets(): Promise<{ tickets: Ticket[]; source: 'datab
   return { tickets: demoTickets(), source: 'demo' };
 }
 
-export async function findTicket(input: TicketInput): Promise<Ticket | null> {
+export async function findDemoResults(input: TicketInput) {
   const db = getDb();
   const demoTicket = demoTickets().find((ticket) => matchesTicket(ticket, input)) ?? null;
   if (db) {
@@ -28,10 +29,10 @@ export async function findTicket(input: TicketInput): Promise<Ticket | null> {
         eq(tickets.adults, input.adults), eq(tickets.children, input.children),
         eq(tickets.infants, input.infants), eq(tickets.cabinClass, input.cabinClass),
       )).limit(1);
-      if (rows[0]) return rows[0];
+      if (rows[0]) return demoResults(rows[0], 'database');
     } catch (error) {
       if (!demoTicket) throw error;
     }
   }
-  return demoTicket;
+  return demoTicket ? demoResults(demoTicket, 'demo') : [];
 }

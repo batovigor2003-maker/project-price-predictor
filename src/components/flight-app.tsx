@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
-import { ArrowDownRight, ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Info, Minus, Plus, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Minus, Plus, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { FlightDateCalendar, type DateFieldName, type FlightDates } from './flight-date-calendar';
 import { cities, cityName, cabinClasses, type TicketInput } from '@/lib/demo-data';
-import type { Flight, ForecastResult } from '@/lib/search-contract';
-import { InlineEmptyState, StateActions, StateScreen } from './search-states';
+import type { Flight } from '@/lib/search-contract';
+import { TicketResults } from './ticket-results';
+import { StateActions, StateScreen } from './search-states';
 import { useFlightSearch } from './use-flight-search';
 
 const classNames: Record<string, string> = { economy: 'Эконом', comfort: 'Комфорт', business: 'Бизнес', first: 'Первый класс' };
-const money = (value: number) => new Intl.NumberFormat('ru-RU').format(value) + ' ₽';
 const dateLabel = (value: string) => new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' }).format(new Date(value + 'T12:00:00'));
 const fullDate = (value: string) => new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(value + 'T12:00:00'));
 const compactDate = (value: string) => new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(new Date(value + 'T12:00:00'));
@@ -94,14 +94,6 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
       case 'loading_flights':
       case 'loading_forecast':
         return <StateScreen kind={state.status}/>;
-      case 'partial_success':
-        return <InlineEmptyState onReset={findAnotherFlight}>
-          <div className="flight-notes">
-            {state.flights.map((flight) => <p key={flight.id}>
-              {cityName(flight.originCode)} → {cityName(flight.destinationCode)} · {money(flight.currentPriceRub)}
-            </p>)}
-          </div>
-        </InlineEmptyState>;
       case 'no_flights':
         return <StateScreen kind={state.status} actions={<StateActions
           primary={{ label: 'Изменить поиск', onClick: reset }}
@@ -161,7 +153,11 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
 
       <section id="search" className={feedback ? undefined : 'scroll-mt-4 pt-3 sm:pt-5'} aria-labelledby="search-title">
         {state.status === 'success' && <div className="summary-card search-result-width state-enter grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:px-6">
-          <div className="break-words"><p className="text-xs font-medium text-[var(--muted)]">Ваш билет</p><h1 id="search-title" tabIndex={-1} className="mt-1 text-lg font-semibold sm:text-xl">{cityName(form.originCode)} <ArrowRight className="inline size-4 text-[var(--brand)]"/> {cityName(form.destinationCode)}</h1><p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(form.departureDate)}{form.returnDate && ` — ${dateLabel(form.returnDate)}`} · {passengerCount} {passengerWord} · {classNames[form.cabinClass].toLowerCase()}</p></div>
+          <div className="break-words">
+            <p className="text-xs font-medium text-[var(--muted)]">Результаты поиска</p>
+            <h1 id="search-title" tabIndex={-1} className="mt-1 text-lg font-semibold sm:text-xl">{cityName(form.originCode)} <ArrowRight className="inline size-4 text-[var(--brand)]"/> {cityName(form.destinationCode)}</h1>
+            <p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(form.departureDate)}{form.returnDate && ` — ${dateLabel(form.returnDate)}`} · {passengerCount} {passengerWord} · {classNames[form.cabinClass].toLowerCase()}</p>
+          </div>
           <button type="button" onClick={reset} className="action-control secondary-action whitespace-nowrap px-3">Изменить</button>
         </div>}
         {idle && <div className="search-card">
@@ -191,7 +187,7 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
         {searchFeedback()}
       </section>
 
-      {state.status === 'success' && <div id="forecast" className="search-result-width mt-3 sm:mt-5"><Forecast ticket={state.forecast}/></div>}
+      {state.status === 'success' && <TicketResults tickets={state.flights} forecasts={state.forecasts}/>}
     </main>
 
     {calendar && <FlightDateCalendar value={form} {...calendar} onConfirm={confirmDates} onClose={() => setCalendar(null)}/>}
@@ -206,7 +202,7 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
       </div>
       <div className="border-t border-[var(--line)] p-4"><Button type="button" onClick={() => setPassengerOpen(false)} className="h-12 w-full text-base">Готово</Button></div>
     </dialog>
-    <footer className="border-t border-[var(--line)] bg-white px-5 py-7 text-center text-xs leading-5 text-[var(--muted)]">Чекбилет · Демонстрация на синтетических данных. Цены и прогнозы вымышлены, качество на реальных ценах пока не проверено.</footer>
+    <footer className="border-t border-[var(--line)] bg-white px-5 py-7 text-center text-xs leading-5 text-[var(--muted)]">Демо на тестовых данных</footer>
   </div>;
 }
 
@@ -234,36 +230,4 @@ function DateField({ label, value, onClick, placeholder = 'Выберите да
 
 function Counter({ label, detail, value, min, max, onChange }: { label: string; detail: string; value: number; min: number; max: number; onChange: (value: number) => void }) {
   return <div className="flex items-center justify-between border-b border-[var(--line)] py-4"><div><p className="font-medium">{label}</p><p className="mt-0.5 text-xs text-[var(--muted)]">{detail}</p></div><div className="flex items-center gap-2"><button type="button" aria-label={`Уменьшить: ${label.toLowerCase()}`} disabled={value <= min} onClick={() => onChange(value - 1)} className="counter-button"><Minus size={17}/></button><span className="w-5 text-center font-semibold">{value}</span><button type="button" aria-label={`Увеличить: ${label.toLowerCase()}`} disabled={value >= max} onClick={() => onChange(value + 1)} className="counter-button"><Plus size={17}/></button></div></div>;
-}
-
-function DirectionBadge({ ticket }: { ticket: ForecastResult }) {
-  const up = ticket.direction === 'up'; const down = ticket.direction === 'down';
-  const Icon = up ? ArrowUpRight : down ? ArrowDownRight : ArrowRight;
-  return <span className={`status-badge ${up ? 'status-up' : down ? 'status-down' : 'status-flat'}`}><Icon size={14}/>{up ? 'Вырастет' : down ? 'Снизится' : 'Почти без изменений'}</span>;
-}
-
-function Forecast({ ticket }: { ticket: ForecastResult }) {
-  const up = ticket.direction === 'up'; const down = ticket.direction === 'down';
-  const advice = up ? 'Покупайте сейчас' : down ? 'Лучше подождать' : 'Можно подождать';
-  const reason = up ? `Тестовый сценарий: цена вырастет на ${ticket.changePercent}% за 7 дней.` : down ? `Тестовый сценарий: цена снизится на ${Math.abs(ticket.changePercent)}% за 7 дней.` : `Тестовый сценарий: изменение на ${Math.abs(ticket.changePercent)}% укладывается в порог ±5%.`;
-  const difference = Math.abs(ticket.predictedPriceRub - ticket.currentPriceRub);
-  return <div className="result-card">
-    <div className="result-enter px-4 pb-4 pt-5 sm:px-6 sm:pt-6" data-step="advice">
-      <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm font-medium text-[var(--muted)]">Рекомендация</p><DirectionBadge ticket={ticket}/></div>
-      <h2 className="mt-2 text-[26px] font-semibold leading-[1.15] tracking-[-.03em] sm:text-3xl">{advice}</h2>
-      <p className="mt-1.5 text-sm leading-5 text-[var(--muted)] sm:text-base">{reason}</p>
-    </div>
-    <div className="result-enter px-4 sm:px-6" data-step="prices">
-      <div className="result-prices grid grid-cols-2 py-3 sm:py-4">
-        <div className="min-w-0 pr-3"><p className="text-xs text-[var(--muted)] sm:text-sm">Цена сейчас</p><p className="mt-1.5 whitespace-nowrap text-[21px] font-semibold tracking-tight sm:text-3xl">{money(ticket.currentPriceRub)}</p></div>
-        <div className="min-w-0 pl-3 sm:pl-6"><p className="text-xs text-[var(--muted)] sm:text-sm">Через 7 дней*</p><p className="mt-1.5 whitespace-nowrap text-[21px] font-semibold tracking-tight sm:text-3xl">{money(ticket.predictedPriceRub)}</p></div>
-      </div>
-    </div>
-    <div className="result-enter px-4 pb-4 pt-3 sm:px-6 sm:pb-6" data-step="detail">
-      {difference > 0 && <p className="text-sm font-semibold text-[var(--brand)]">{up ? 'Если купить сейчас, разница' : 'Если подождать, разница'} · {money(difference)}</p>}
-      <p className="mt-2 text-sm font-medium">{cityName(ticket.originCode)} → {cityName(ticket.destinationCode)}</p>
-      <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Вылет {dateLabel(ticket.departureDate)}{ticket.returnDate && ` · обратно ${dateLabel(ticket.returnDate)}`} · {ticket.adults} взр.{ticket.children > 0 && ` · ${ticket.children} реб.`}{ticket.infants > 0 && ` · ${ticket.infants} мл.`} · {classNames[ticket.cabinClass]}</p>
-      <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-[var(--muted)]"><Info size={14} className="mt-0.5 shrink-0"/>*Тестовый сценарий на синтетических данных. Реальная цена может измениться иначе.</p>
-    </div>
-  </div>;
 }
