@@ -121,9 +121,9 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
       </section>
 
       <section id="search" className="scroll-mt-4 pt-3 sm:pt-5" aria-labelledby="search-title">
-        {formCollapsed && result ? <div className="summary-card result-enter flex flex-wrap items-center justify-between gap-3 p-4 sm:px-6">
-          <div className="min-w-0"><p className="text-xs font-medium text-[var(--muted)]">Ваш билет</p><h1 id="search-title" className="mt-1 text-lg font-semibold sm:text-xl">{cityName(form.originCode)} <ArrowRight className="inline size-4 text-[var(--brand)]"/> {cityName(form.destinationCode)}</h1><p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(form.departureDate)}{form.returnDate && ` — ${dateLabel(form.returnDate)}`} · {passengerCount} {passengerWord} · {classNames[form.cabinClass].toLowerCase()}</p></div>
-          <button type="button" onClick={() => setFormCollapsed(false)} className="action-control secondary-action px-3">Изменить</button>
+        {formCollapsed && result ? <div className="summary-card result-enter grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:px-6">
+          <div className="break-words"><p className="text-xs font-medium text-[var(--muted)]">Ваш билет</p><h1 id="search-title" className="mt-1 text-lg font-semibold sm:text-xl">{cityName(form.originCode)} <ArrowRight className="inline size-4 text-[var(--brand)]"/> {cityName(form.destinationCode)}</h1><p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(form.departureDate)}{form.returnDate && ` — ${dateLabel(form.returnDate)}`} · {passengerCount} {passengerWord} · {classNames[form.cabinClass].toLowerCase()}</p></div>
+          <button type="button" onClick={() => setFormCollapsed(false)} className="action-control secondary-action whitespace-nowrap px-3">Изменить</button>
         </div> : <div className="search-card">
           <div className="mb-3 max-w-2xl sm:mb-5">
             <h1 id="search-title" className="text-[26px] font-semibold leading-[1.14] tracking-[-.035em] sm:text-[38px]">Покупать сейчас или подождать?</h1>
