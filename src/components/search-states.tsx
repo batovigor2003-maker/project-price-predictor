@@ -13,11 +13,6 @@ const content = {
     description: 'Анализируем изменение цены на ближайшие 7 дней.',
     illustration: 'loading-forecast',
   },
-  no_prediction: {
-    title: 'Прогноз пока недоступен',
-    description: 'Недостаточно данных, чтобы оценить изменение цены.',
-    illustration: 'no-prediction',
-  },
   no_flights: {
     title: 'Билеты не найдены',
     description: 'Попробуйте выбрать другие даты или направление.',
@@ -70,15 +65,6 @@ export function StateScreen({ kind, actions, children }: { kind: StateKind; acti
     {children}
     {actions}
   </div>;
-}
-
-export function InlineEmptyState({ children, onReset }: { children: ReactNode; onReset: () => void }) {
-  return <StateScreen
-    kind="no_prediction"
-    actions={<StateActions primary={{ label: 'Найти другой рейс', onClick: onReset }}/>}
-  >
-    {children}
-  </StateScreen>;
 }
 
 export function FlightSkeleton() {

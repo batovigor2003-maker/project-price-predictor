@@ -2,16 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { TicketInput } from '@/lib/demo-data';
-import type { Flight, FlightResponse, ForecastResponse, ForecastResult } from '@/lib/search-contract';
+import type { FlightResponse, ForecastResponse, ResultTicket, TicketForecast } from '@/lib/search-contract';
 import { requestSearch, SearchRequestError } from '@/lib/search-request';
 
-type SearchStage = { step: 'flights' } | { step: 'forecast'; flights: Flight[] };
+type SearchStage = { step: 'flights' } | { step: 'forecast'; flights: ResultTicket[] };
 
 type SearchState =
   | { status: 'idle'; invalid?: boolean }
   | { status: 'loading_flights' | 'loading_forecast' | 'no_flights' }
-  | { status: 'success'; forecast: ForecastResult }
-  | { status: 'partial_success'; flights: Flight[]; forecast: 'no_prediction' }
+  | { status: 'success'; flights: ResultTicket[]; forecasts: Record<string, TicketForecast> }
   | { status: 'network_error' | 'service_error'; stage: SearchStage; input: TicketInput };
 
 export function useFlightSearch() {
@@ -51,16 +50,12 @@ export function useFlightSearch() {
 
       const { flights } = stage;
       setState({ status: 'loading_forecast' });
-      const forecast = await requestSearch<ForecastResponse>('/api/forecast', input, controller.signal);
+      const result = await requestSearch<ForecastResponse>('/api/forecast', input, controller.signal);
       if (!isCurrent()) return;
-
-      if (forecast?.status === 'no_prediction') {
-        setState({ status: 'partial_success', flights, forecast: 'no_prediction' });
-      } else if (forecast?.status === 'success' && forecast.ticket) {
-        setState({ status: 'success', forecast: forecast.ticket });
-      } else {
+      if (!result?.forecasts || typeof result.forecasts !== 'object' || Array.isArray(result.forecasts)) {
         throw new SearchRequestError('service_error');
       }
+      setState({ status: 'success', flights, forecasts: result.forecasts });
     } catch (error) {
       if (!isCurrent()) return;
       const kind = error instanceof SearchRequestError ? error.kind : 'service_error';
