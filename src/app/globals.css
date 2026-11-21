@@ -42,7 +42,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .app-header { background: var(--brand); color: white; }
 .brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 10px; background: var(--navy); color: white; }
 .search-card, .result-card, .summary-card { background: white; border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
-.search-card { padding: 24px 20px 20px; }
+.search-card { padding: 20px 20px 16px; }
 .field-control { position: relative; }
 .field-control::after { content: ''; position: absolute; right: 19px; top: 23px; width: 8px; height: 8px; border-right: 1.7px solid var(--muted); border-bottom: 1.7px solid var(--muted); transform: rotate(45deg); pointer-events: none; }
 .field-control > select { display: block; width: 100%; min-width: 0; height: 56px; appearance: none; border: 1px solid transparent; border-radius: var(--radius-field); background: var(--field); padding: 0 42px 0 16px; color: var(--ink); font-size: 16px; font-weight: 500; outline: 0; transition: background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast); }
@@ -78,8 +78,9 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .cabin-option[aria-pressed='true'] { border-color: var(--brand); color: var(--brand); background: #f2f5ff; }
 .carousel-track { scrollbar-width: none; }
 .carousel-track::-webkit-scrollbar { display: none; }
-.carousel-card { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 14px; background: white; transition: border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast); }
-.carousel-card:hover { border-color: #bfc9e5; box-shadow: var(--shadow-card); }
+.carousel-card { border-radius: 9999px; background: #faf9fd; transition: background var(--motion-fast), transform var(--motion-fast); }
+.carousel-card:hover { background: var(--surface); }
+.carousel-card:focus-visible { outline-offset: -2px; }
 .carousel-card:active { transform: scale(.985); }
 .carousel-arrow { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: white; transition: background var(--motion-fast), transform var(--motion-fast); }
 .carousel-arrow:hover { background: var(--field); }

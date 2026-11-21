@@ -24,7 +24,6 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
   const [loading, setLoading] = useState(false);
   const [formCollapsed, setFormCollapsed] = useState(false);
   const [passengerOpen, setPassengerOpen] = useState(false);
-  const [carouselIndex, setCarouselIndex] = useState(0);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const featured = tickets.filter((_, index) => index % 10 === 0);
@@ -88,9 +87,12 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
   }
 
   function moveCarousel(direction: -1 | 1) {
-    const next = (carouselIndex + direction + featured.length) % featured.length;
-    setCarouselIndex(next);
-    carouselRef.current?.children[next]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    const track = carouselRef.current;
+    if (!track) return;
+    track.scrollBy({
+      left: direction * track.clientWidth * 0.75,
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+    });
   }
 
   return <div className="app-shell">
@@ -102,16 +104,32 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
     </header>
 
     <main className="mx-auto max-w-[960px] px-4 pb-6 sm:px-6 sm:pb-8">
-      <section id="search" className={`scroll-mt-4 ${formCollapsed && result ? 'pt-5' : 'pt-5 sm:pt-10'}`} aria-labelledby="search-title">
+      <section className="pt-4 sm:pt-6" aria-labelledby="carousel-title">
+        <div className="mb-1 flex items-center justify-between gap-3">
+          <h2 id="carousel-title" className="text-lg font-bold leading-tight tracking-tight sm:text-2xl">Что ищут другие 👀</h2>
+          <div className="hidden gap-2 sm:flex">
+            <button type="button" aria-label="Предыдущие маршруты" onClick={() => moveCarousel(-1)} className="carousel-arrow"><ChevronLeft size={20}/></button>
+            <button type="button" aria-label="Следующие маршруты" onClick={() => moveCarousel(1)} className="carousel-arrow"><ChevronRight size={20}/></button>
+          </div>
+        </div>
+        <div ref={carouselRef} className="carousel-track -mx-1 flex snap-x snap-mandatory scroll-px-1 gap-2 overflow-x-auto p-1 sm:gap-3">
+          {featured.map((ticket) => <button key={ticket.id} type="button" onClick={() => selectTicket(ticket)} className="carousel-card inline-flex min-h-11 shrink-0 snap-start items-center gap-1.5 whitespace-nowrap px-3.5 sm:min-h-12 sm:px-5">
+            <span aria-hidden="true" className="text-base leading-none sm:text-xl">✈️</span>
+            <span className="text-[13px] font-bold sm:text-sm">{cityName(ticket.originCode)} — {cityName(ticket.destinationCode)}</span>
+          </button>)}
+        </div>
+      </section>
+
+      <section id="search" className="scroll-mt-4 pt-3 sm:pt-5" aria-labelledby="search-title">
         {formCollapsed && result ? <div className="summary-card result-enter flex flex-wrap items-center justify-between gap-3 p-4 sm:px-6">
           <div className="min-w-0"><p className="text-xs font-medium text-[var(--muted)]">Ваш билет</p><h1 id="search-title" className="mt-1 text-lg font-semibold sm:text-xl">{cityName(form.originCode)} <ArrowRight className="inline size-4 text-[var(--brand)]"/> {cityName(form.destinationCode)}</h1><p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(form.departureDate)}{form.returnDate && ` — ${dateLabel(form.returnDate)}`} · {passengerCount} {passengerWord} · {classNames[form.cabinClass].toLowerCase()}</p></div>
           <button type="button" onClick={() => setFormCollapsed(false)} className="action-control secondary-action px-3">Изменить</button>
         </div> : <div className="search-card">
-          <div className="mb-4 max-w-2xl sm:mb-5">
-            <h1 id="search-title" className="text-[28px] font-semibold leading-[1.14] tracking-[-.035em] sm:text-[38px]">Покупать сейчас или подождать?</h1>
+          <div className="mb-3 max-w-2xl sm:mb-5">
+            <h1 id="search-title" className="text-[26px] font-semibold leading-[1.14] tracking-[-.035em] sm:text-[38px]">Покупать сейчас или подождать?</h1>
           </div>
           <form onSubmit={(event) => { event.preventDefault(); void submit(); }}>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               <div className="route-fields sm:col-span-2">
                 <Field label="Откуда"><select value={form.originCode} onChange={(e) => set('originCode', e.target.value)}>{cities.map((city) => <option key={city.code} value={city.code}>{city.name}</option>)}</select></Field>
                 <Field label="Куда"><select value={form.destinationCode} onChange={(e) => set('destinationCode', e.target.value)}>{cities.map((city) => <option key={city.code} value={city.code}>{city.name}</option>)}</select></Field>
@@ -121,40 +139,19 @@ export function FlightApp({ tickets }: { tickets: DisplayTicket[] }) {
                 <DateField label="Обратно" value={form.returnDate ?? ''} min={form.departureDate} placeholder="Необязательно" clearable onChange={(value) => set('returnDate', value || null)}/>
               </div>
             </div>
-            <button type="button" className="passenger-trigger mt-4 flex min-h-14 w-full items-center justify-between px-4 py-2.5 text-left" onClick={() => setPassengerOpen(true)}>
+            <button type="button" className="passenger-trigger mt-3 flex min-h-14 w-full items-center justify-between px-4 py-2.5 text-left sm:mt-4" onClick={() => setPassengerOpen(true)}>
               <span><span className="block text-xs font-medium text-[var(--muted)]">Пассажиры и класс</span><span className="mt-0.5 block text-sm font-medium sm:text-base">{passengerCount} {passengerWord}, {classNames[form.cabinClass].toLowerCase()}</span></span><ChevronDown size={18} className="shrink-0 text-[var(--muted)]"/>
             </button>
-            <div className="mt-5">
+            <div className="mt-3 sm:mt-5">
               <Button variant="highlight" size="lg" disabled={loading} aria-busy={loading} className="w-full text-base">{loading ? 'Ищем прогноз…' : 'Узнать прогноз'}</Button>
             </div>
           </form>
         </div>}
       </section>
 
-      <section id="forecast" aria-live="polite" className="pt-4 sm:pt-6">
+      <section id="forecast" aria-live="polite" className="pt-3 empty:pt-0 sm:pt-5 sm:empty:pt-0">
         {error && <div className="rounded-2xl border border-[#ffd9d9] bg-[#fff5f5] p-5 text-[#a03232]">{error}</div>}
         {result && <Forecast key={result.id} ticket={result}/>}
-      </section>
-
-      <section className="pt-10 sm:pt-12" aria-labelledby="carousel-title">
-        <div className="mb-5 flex items-end justify-between gap-3">
-          <h2 id="carousel-title" className="text-xl font-semibold sm:text-2xl">Что ищут другие 👀</h2>
-          <div className="hidden gap-2 sm:flex"><button type="button" aria-label="Предыдущий билет" onClick={() => moveCarousel(-1)} className="carousel-arrow"><ChevronLeft size={20}/></button><button type="button" aria-label="Следующий билет" onClick={() => moveCarousel(1)} className="carousel-arrow"><ChevronRight size={20}/></button></div>
-        </div>
-        <div className="relative -mx-4 overflow-hidden px-4 sm:-mx-6 sm:px-6">
-          <div ref={carouselRef} className="carousel-track flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4" onScroll={(event) => {
-            const track = event.currentTarget;
-            const first = track.firstElementChild as HTMLElement | null;
-            if (first) setCarouselIndex(Math.min(featured.length - 1, Math.round(track.scrollLeft / (first.offsetWidth + 12))));
-          }}>
-            {featured.map((ticket, index) => <button key={ticket.id} type="button" onClick={() => selectTicket(ticket)} className="carousel-card min-w-[245px] snap-start p-5 text-left sm:min-w-[290px]">
-              <span className="flex items-center justify-between"><span className="text-xs font-medium text-[var(--muted)]">Маршрут {index + 1}</span><ArrowUpRight size={17} className="text-[var(--muted)]"/></span>
-              <span className="mt-5 block text-lg font-semibold">{cityName(ticket.originCode)} <ArrowRight size={15} className="inline text-[var(--muted)]"/> {cityName(ticket.destinationCode)}</span>
-              <span className="mt-2 block text-sm text-[var(--muted)]">{dateLabel(ticket.departureDate)} · {classNames[ticket.cabinClass]}</span>
-              <span className="mt-5 flex items-center justify-between border-t border-[var(--line)] pt-4"><span className="text-lg font-semibold">{money(ticket.currentPriceRub)}</span><span className="text-sm font-semibold text-[var(--brand)]">Проверить</span></span>
-            </button>)}
-          </div>
-        </div>
       </section>
     </main>
 
@@ -197,22 +194,22 @@ function Forecast({ ticket }: { ticket: DisplayTicket }) {
   const reason = up ? `Тестовый сценарий: цена вырастет на ${ticket.changePercent}% за 7 дней.` : down ? `Тестовый сценарий: цена снизится на ${Math.abs(ticket.changePercent)}% за 7 дней.` : `Тестовый сценарий: изменение на ${Math.abs(ticket.changePercent)}% укладывается в порог ±5%.`;
   const difference = Math.abs(ticket.predictedPriceRub - ticket.currentPriceRub);
   return <div className="result-card">
-    <div className="result-enter px-5 pb-6 pt-6 sm:px-8 sm:pt-8" data-step="advice">
+    <div className="result-enter px-4 pb-4 pt-5 sm:px-6 sm:pt-6" data-step="advice">
       <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm font-medium text-[var(--muted)]">Рекомендация</p><DirectionBadge ticket={ticket}/></div>
-      <h2 className="mt-3 text-[29px] font-semibold leading-[1.15] tracking-[-.03em] sm:text-4xl">{advice}</h2>
-      <p className="mt-2 text-sm leading-6 text-[var(--muted)] sm:text-base">{reason}</p>
+      <h2 className="mt-2 text-[26px] font-semibold leading-[1.15] tracking-[-.03em] sm:text-3xl">{advice}</h2>
+      <p className="mt-1.5 text-sm leading-5 text-[var(--muted)] sm:text-base">{reason}</p>
     </div>
-    <div className="result-enter px-5 sm:px-8" data-step="prices">
-      <div className="result-prices grid grid-cols-2 py-5">
+    <div className="result-enter px-4 sm:px-6" data-step="prices">
+      <div className="result-prices grid grid-cols-2 py-3 sm:py-4">
         <div className="min-w-0 pr-3"><p className="text-xs text-[var(--muted)] sm:text-sm">Цена сейчас</p><p className="mt-1.5 whitespace-nowrap text-[21px] font-semibold tracking-tight sm:text-3xl">{money(ticket.currentPriceRub)}</p></div>
         <div className="min-w-0 pl-3 sm:pl-6"><p className="text-xs text-[var(--muted)] sm:text-sm">Через 7 дней*</p><p className="mt-1.5 whitespace-nowrap text-[21px] font-semibold tracking-tight sm:text-3xl">{money(ticket.predictedPriceRub)}</p></div>
       </div>
     </div>
-    <div className="result-enter px-5 pb-6 pt-5 sm:px-8 sm:pb-8" data-step="detail">
+    <div className="result-enter px-4 pb-4 pt-3 sm:px-6 sm:pb-6" data-step="detail">
       {difference > 0 && <p className="text-sm font-semibold text-[var(--brand)]">{up ? 'Если купить сейчас, разница' : 'Если подождать, разница'} · {money(difference)}</p>}
-      <p className="mt-3 text-sm font-medium">{cityName(ticket.originCode)} → {cityName(ticket.destinationCode)}</p>
+      <p className="mt-2 text-sm font-medium">{cityName(ticket.originCode)} → {cityName(ticket.destinationCode)}</p>
       <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Вылет {dateLabel(ticket.departureDate)}{ticket.returnDate && ` · обратно ${dateLabel(ticket.returnDate)}`} · {ticket.adults} взр.{ticket.children > 0 && ` · ${ticket.children} реб.`}{ticket.infants > 0 && ` · ${ticket.infants} мл.`} · {classNames[ticket.cabinClass]}</p>
-      <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-[var(--muted)]"><Info size={14} className="mt-0.5 shrink-0"/>*Тестовый сценарий на синтетических данных. Реальная цена может измениться иначе.</p>
+      <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-[var(--muted)]"><Info size={14} className="mt-0.5 shrink-0"/>*Тестовый сценарий на синтетических данных. Реальная цена может измениться иначе.</p>
     </div>
   </div>;
 }
