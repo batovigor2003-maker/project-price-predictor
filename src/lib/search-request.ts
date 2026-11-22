@@ -1,6 +1,6 @@
 import type { TicketInput } from './demo-data';
 
-const requestTimeoutMs = 15_000;
+const requestTimeoutMs = 25_000;
 
 export type SearchFailure = 'network_error' | 'service_error' | 'invalid_search' | 'ticket_not_found';
 

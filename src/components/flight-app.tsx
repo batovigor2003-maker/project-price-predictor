@@ -16,10 +16,13 @@ const weekdayFormat = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' });
 const dateFieldLabel = (value: string) => `${dateLabel(value).replace(/\.$/, '')}, ${weekdayFormat.format(new Date(value + 'T12:00:00'))}`;
 const fromTicket = (ticket: Flight): TicketInput => ({ originCode: ticket.originCode, destinationCode: ticket.destinationCode, departureDate: ticket.departureDate, returnDate: ticket.returnDate, adults: ticket.adults, children: ticket.children, infants: ticket.infants, cabinClass: ticket.cabinClass });
 
-export function FlightApp({ tickets }: { tickets: Flight[] }) {
+export function FlightApp({ tickets, liveDepartureDate }: { tickets: Flight[]; liveDepartureDate: string | null }) {
+  const liveSearch = liveDepartureDate !== null;
+  const modeLabel = liveSearch ? 'Тестовый поиск билетов' : 'Демо на тестовых данных';
   const initialForm = {
     ...fromTicket(tickets.find((ticket) => ticket.returnDate === null) ?? tickets[0]),
     returnDate: null,
+    ...(liveDepartureDate && { departureDate: liveDepartureDate, adults: 1, children: 0, infants: 0, cabinClass: 'economy' }),
   };
   const [form, setForm] = useState<TicketInput>(initialForm);
   const { state, reset, submit } = useFlightSearch();
@@ -29,6 +32,7 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const featured = tickets.filter((_, index) => index % 10 === 0);
+  const cabinName = liveSearch && form.cabinClass === 'comfort' ? 'Премиум-эконом' : classNames[form.cabinClass];
   const passengerCount = form.adults + form.children + form.infants;
   const passengerWord = passengerCount % 100 >= 11 && passengerCount % 100 <= 14 ? 'пассажиров' : passengerCount % 10 === 1 ? 'пассажир' : passengerCount % 10 >= 2 && passengerCount % 10 <= 4 ? 'пассажира' : 'пассажиров';
 
@@ -82,7 +86,9 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
   }
 
   function selectTicket(ticket: Flight) {
-    const input = fromTicket(ticket);
+    const input = liveSearch
+      ? { ...initialForm, originCode: ticket.originCode, destinationCode: ticket.destinationCode }
+      : fromTicket(ticket);
     setForm(input);
     void submit(input);
   }
@@ -130,7 +136,7 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
           findAnotherFlight();
           window.scrollTo({ top: 0, behavior: 'instant' });
         }} className="flex items-center gap-2.5 text-base font-semibold tracking-tight"><span className="brand-mark" aria-hidden="true"><span className="size-2 rounded-full bg-white"/></span>Чекбилет</a>
-        <span className="text-[11px] font-medium text-white/80 sm:text-xs">Демо на тестовых данных</span>
+        <span className="text-[11px] font-medium text-white/80 sm:text-xs">{modeLabel}</span>
       </div>
     </header>
 
@@ -156,13 +162,13 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
           <div className="break-words">
             <p className="text-xs font-medium text-[var(--muted)]">Результаты поиска</p>
             <h1 id="search-title" tabIndex={-1} className="mt-1 text-lg font-semibold sm:text-xl">{cityName(form.originCode)} <ArrowRight className="inline size-4 text-[var(--brand)]"/> {cityName(form.destinationCode)}</h1>
-            <p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(form.departureDate)}{form.returnDate && ` — ${dateLabel(form.returnDate)}`} · {passengerCount} {passengerWord} · {classNames[form.cabinClass].toLowerCase()}</p>
+            <p className="mt-1 text-sm text-[var(--muted)]">{dateLabel(form.departureDate)}{form.returnDate && ` — ${dateLabel(form.returnDate)}`} · {passengerCount} {passengerWord} · {cabinName.toLowerCase()}</p>
           </div>
           <button type="button" onClick={reset} className="action-control secondary-action whitespace-nowrap px-3">Изменить</button>
         </div>}
         {idle && <div className="search-card">
           <div className="mb-3 max-w-2xl sm:mb-5">
-            <h1 id="search-title" tabIndex={-1} className="search-heading">Покупать сейчас или подождать?</h1>
+            <h1 id="search-title" tabIndex={-1} className="search-heading">{liveSearch ? 'Найдите авиабилет' : 'Покупать сейчас или подождать?'}</h1>
           </div>
           <form onSubmit={(event) => { event.preventDefault(); void submit(form); }}>
             <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
@@ -176,19 +182,19 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
               </div>
             </div>
             <button type="button" aria-haspopup="dialog" className="passenger-trigger mt-3 flex min-h-14 w-full items-center justify-between px-4 py-2.5 text-left sm:mt-4" onClick={() => setPassengerOpen(true)}>
-              <span className="text-base font-medium">{passengerCount} {passengerWord}, {classNames[form.cabinClass].toLowerCase()}</span>
+              <span className="text-base font-medium">{passengerCount} {passengerWord}, {cabinName.toLowerCase()}</span>
               <ChevronDown size={18} className="shrink-0 text-[var(--muted)]" aria-hidden="true"/>
             </button>
             <div className="mt-3 sm:mt-5">
               {state.invalid && <p role="alert" className="mb-3 text-sm text-[#a03232]">Проверьте маршрут, даты и пассажиров.</p>}
-              <Button variant="highlight" size="lg" className="w-full text-base">Узнать прогноз</Button>
+              <Button variant="highlight" size="lg" className="w-full text-base">{liveSearch ? 'Найти билеты' : 'Узнать прогноз'}</Button>
             </div>
           </form>
         </div>}
         {searchFeedback()}
       </section>
 
-      {state.status === 'success' && <TicketResults tickets={state.flights} forecasts={state.forecasts}/>}
+      {state.status === 'success' && <TicketResults tickets={state.flights} forecasts={state.forecasts} source={state.source}/>}
     </main>
 
     {calendar && <FlightDateCalendar value={form} {...calendar} onConfirm={confirmDates} onClose={() => setCalendar(null)}/>}
@@ -196,14 +202,14 @@ export function FlightApp({ tickets }: { tickets: Flight[] }) {
     <dialog ref={dialogRef} onClose={() => setPassengerOpen(false)} onCancel={(event) => { event.preventDefault(); setPassengerOpen(false); }} onClick={(event) => { if (event.target === event.currentTarget) setPassengerOpen(false); }} className="passenger-dialog w-[calc(100%-24px)] max-w-md p-0">
       <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4"><h2 className="text-xl font-semibold">Пассажиры и класс</h2><button type="button" aria-label="Закрыть" onClick={() => setPassengerOpen(false)} className="action-control grid size-11 place-items-center rounded-xl hover:bg-[var(--field)]"><X size={19}/></button></div>
       <div className="px-5 py-2">
-        <Counter label="Взрослые" detail="От 12 лет" value={form.adults} min={1} max={9} onChange={(value) => set('adults', value)}/>
-        <Counter label="Дети" detail="От 2 до 11 лет" value={form.children} min={0} max={9} onChange={(value) => set('children', value)}/>
-        <Counter label="Младенцы" detail="До 2 лет, без места" value={form.infants} min={0} max={form.adults} onChange={(value) => set('infants', value)}/>
-        <div className="border-t border-[var(--line)] py-4"><p className="mb-3 text-sm font-semibold">Класс обслуживания</p><div className="grid grid-cols-2 gap-2">{cabinClasses.map((value) => <button key={value} type="button" aria-pressed={form.cabinClass === value} onClick={() => set('cabinClass', value)} className="cabin-option flex items-center justify-between px-3 py-3 text-left text-sm font-medium">{classNames[value]}{form.cabinClass === value && <Check size={16}/>}</button>)}</div></div>
+        <Counter label="Взрослые" detail="От 12 лет" value={form.adults} min={1} max={liveSearch ? 9 - form.children - form.infants : 9} onChange={(value) => set('adults', value)}/>
+        <Counter label="Дети" detail="От 2 до 11 лет" value={form.children} min={0} max={liveSearch ? 9 - form.adults - form.infants : 9} onChange={(value) => set('children', value)}/>
+        <Counter label="Младенцы" detail="До 2 лет, без места" value={form.infants} min={0} max={liveSearch ? Math.min(form.adults, 9 - form.adults - form.children) : form.adults} onChange={(value) => set('infants', value)}/>
+        <div className="border-t border-[var(--line)] py-4"><p className="mb-3 text-sm font-semibold">Класс обслуживания</p><div className="grid grid-cols-2 gap-2">{cabinClasses.map((value) => <button key={value} type="button" aria-pressed={form.cabinClass === value} onClick={() => set('cabinClass', value)} className="cabin-option flex items-center justify-between px-3 py-3 text-left text-sm font-medium">{liveSearch && value === 'comfort' ? 'Премиум-эконом' : classNames[value]}{form.cabinClass === value && <Check size={16}/>}</button>)}</div></div>
       </div>
       <div className="border-t border-[var(--line)] p-4"><Button type="button" onClick={() => setPassengerOpen(false)} className="h-12 w-full text-base">Готово</Button></div>
     </dialog>
-    <footer className="px-5 py-7 text-center text-xs leading-5 text-[var(--muted)]">Демо на тестовых данных</footer>
+    <footer className="px-5 py-7 text-center text-xs leading-5 text-[var(--muted)]">{modeLabel}</footer>
   </div>;
 }
 
