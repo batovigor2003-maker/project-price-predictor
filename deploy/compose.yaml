@@ -10,6 +10,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://checkbilet:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/checkbilet
+      IGNAV_API_KEY: ${IGNAV_API_KEY:-}
     ports:
       - "127.0.0.1:3100:3000"
     logging: *logging
