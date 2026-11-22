@@ -30,7 +30,7 @@ test('each search scenario has distinct flight options with stable forecast keys
     assert.equal(results.length, 3);
     assert.deepEqual(results, demoResults(base, 'demo'));
     assert.equal(new Set(results.map(({ ticket }) => ticket.id)).size, 3);
-    assert.equal(new Set(results.map(({ ticket }) => ticket.currentPriceRub)).size, 3);
+    assert.equal(new Set(results.map(({ ticket }) => ticket.price.amount)).size, 3);
     assert.deepEqual(new Set(results.map(({ forecast }) => forecast?.direction)), new Set(['down', 'up', 'stable']));
     for (const { ticket } of results) {
       assert.equal(Boolean(ticket.inbound), Boolean(base.returnDate));

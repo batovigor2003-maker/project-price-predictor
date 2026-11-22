@@ -22,9 +22,9 @@ const routeDurations: Record<string, number> = {
 };
 
 const options = [
-  { airline: 'aeroflot', departure: 17 * 60 + 45, returnDeparture: 13 * 60 + 20, priceOffset: 0, durationOffset: 0, probability: 78 },
-  { airline: 's7', departure: 8 * 60 + 20, returnDeparture: 10 * 60 + 5, priceOffset: 1060, durationOffset: 10, probability: 71 },
-  { airline: 'ural', departure: 12 * 60 + 10, returnDeparture: 18 * 60 + 45, priceOffset: 2300, durationOffset: 5, probability: 64 },
+  { id: 'aeroflot', airline: { code: 'SU', name: 'Аэрофлот' }, departure: 17 * 60 + 45, returnDeparture: 13 * 60 + 20, priceOffset: 0, durationOffset: 0, probability: 78 },
+  { id: 's7', airline: { code: 'S7', name: 'S7 Airlines' }, departure: 8 * 60 + 20, returnDeparture: 10 * 60 + 5, priceOffset: 1060, durationOffset: 10, probability: 71 },
+  { id: 'ural', airline: { code: 'U6', name: 'Уральские авиалинии' }, departure: 12 * 60 + 10, returnDeparture: 18 * 60 + 45, priceOffset: 2300, durationOffset: 5, probability: 64 },
 ] as const;
 
 const directions = ['down', 'up', 'stable'] as const;
@@ -34,15 +34,17 @@ function localTime(minutes: number): string {
   return [Math.floor(normalized / 60), normalized % 60].map((part) => String(part).padStart(2, '0')).join(':');
 }
 
-function flightLeg(from: Airport, to: Airport, departure: number, durationMinutes: number): FlightLeg {
+function flightLeg(from: Airport, to: Airport, departure: number, durationMinutes: number, airline: FlightLeg['airline']): FlightLeg {
   const arrival = departure + durationMinutes + (to.utcOffset - from.utcOffset) * 60;
   return {
+    airline,
     departureAirport: from.code,
     departureTime: localTime(departure),
     arrivalAirport: to.code,
     arrivalTime: localTime(arrival),
     arrivalDayOffset: Math.floor(arrival / 1440),
     durationMinutes,
+    stops: 0,
   };
 }
 
@@ -58,11 +60,10 @@ export function demoResults(base: Ticket, source: 'database' | 'demo') {
     const durationMinutes = duration + option.durationOffset;
     return {
       ticket: {
-        id: `${source}-${base.id}-${base.departureDate}-${option.airline}`,
-        airline: option.airline,
-        currentPriceRub: base.currentPriceRub + option.priceOffset,
-        outbound: flightLeg(from, to, option.departure, durationMinutes),
-        inbound: base.returnDate ? flightLeg(to, from, option.returnDeparture, durationMinutes) : null,
+        id: `${source}-${base.id}-${base.departureDate}-${option.id}`,
+        price: { amount: base.currentPriceRub + option.priceOffset, currency: 'RUB', approximate: false },
+        outbound: flightLeg(from, to, option.departure, durationMinutes, option.airline),
+        inbound: base.returnDate ? flightLeg(to, from, option.returnDeparture, durationMinutes, option.airline) : null,
       },
       forecast: hasForecast ? {
         direction: directions[(directionIndex + index) % directions.length],
